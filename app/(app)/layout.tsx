@@ -27,11 +27,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [pathname, router]);
 
-
-
   return (
     <div className="flex min-h-screen flex-col bg-gray-100 text-gray-900">
-      <header className="border-b border-gray-200 bg-[#DC2627]">
+      <header
+        className="border-b border-gray-200 bg-[#DC2627]"
+        style={{
+          boxShadow:
+            "0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12)",
+        }}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             {/* <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-lg shadow-brand-500/40">
@@ -110,10 +114,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`rounded-lg px-3 py-1.5 font-medium transition ${
+                    className={`rounded-lg px-3 py-1.5 font-medium transition border-[1px] ${
                       active
-                        ? "bg-white text-black"
-                        : "text-white hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-white text-black border-[#dc2627]"
+                        : "text-white border-white hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     {item.label}
@@ -123,7 +127,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </nav>
             <button
               onClick={handleLogout}
-              className="btn-primary text-xs sm:text-sm"
+              className="rounded-lg px-3 py-1.5 font-medium transition border-[1px] text-white border-white hover:bg-white hover:text-black text-xs sm:text-sm"
             >
               Logout
             </button>

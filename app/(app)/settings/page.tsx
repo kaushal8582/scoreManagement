@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchUsers, uploadUsersCsv, createTeam, fetchTeams, fetchUserTotals, deleteTeam } from "../../../lib/api";
+import { fetchUsers, uploadUsersCsv, createTeam, fetchTeams, fetchUserTotals, deleteTeam, updateTeam } from "../../../lib/api";
+import WeeklyReports from "../../../components/WeeklyReports";
 
-type TabKey = "upload" | "teams";
+type TabKey = "upload" | "teams" | "weekly";
 
 interface UserOption { value: string; label: string; }
 interface UserRow { _id: string; firstName: string; lastName: string; email?: string; category?: string; teamId?: { name?: string } | null }
-interface TeamRow { _id: string; name: string; users: { _id: string; firstName: string; lastName: string; fullName: string; category?: string }[] }
+interface TeamRow { _id: string; name: string; users: { _id: string; firstName: string; lastName: string; fullName: string; category?: string }[]; captainUserId?: { _id: string; fullName: string } | null }
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("upload");
@@ -24,9 +25,12 @@ export default function SettingsPage() {
   const [userSearch, setUserSearch] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
   const [totalsByUserId, setTotalsByUserId] = useState<Record<string, number>>({});
+  const [captainModalTeamId, setCaptainModalTeamId] = useState<string | null>(null);
+  const [selectedCaptainUserId, setSelectedCaptainUserId] = useState<string | null>(null);
   const pageSize = 25;
 
   useEffect(() => {
+    
     let mounted = true;
     async function loadUsers() {
       setLoading(true);
@@ -113,6 +117,25 @@ export default function SettingsPage() {
     }
   };
 
+  const openCaptainModal = (teamId: string) => {
+    setCaptainModalTeamId(teamId);
+    setSelectedCaptainUserId(null);
+  };
+
+  const saveCaptain = async () => {
+    if (!captainModalTeamId) return;
+    try {
+      await updateTeam(captainModalTeamId, { captainUserId: selectedCaptainUserId ?? null });
+      const teamsData = await fetchTeams();
+      setTeams(teamsData as any);
+    } catch (err: any) {
+      setError(err.message || "Failed to set captain");
+    } finally {
+      setCaptainModalTeamId(null);
+      setSelectedCaptainUserId(null);
+    }
+  };
+
   const filteredUsers = users.filter((u) => {
     const q = userSearch.trim().toLowerCase();
     if (!q) return true;
@@ -152,12 +175,22 @@ export default function SettingsPage() {
             <button
               className={`px-3 py-2 font-medium ${
                 activeTab === "teams"
-                  ? "border-b-2 border-brand-500 black"
+                  ? "border-b-2 border-brand-500 text-black"
                   : "text-black"
               }`}
               onClick={() => setActiveTab("teams")}
             >
               Teams
+            </button>
+            <button
+              className={`px-3 py-2 font-medium ${
+                activeTab === "weekly"
+                  ? "border-b-2 border-brand-500 text-black"
+                  : "text-black"
+              }`}
+              onClick={() => setActiveTab("weekly")}
+            >
+              Weekly reports
             </button>
           </nav>
         </div>
@@ -173,16 +206,25 @@ export default function SettingsPage() {
                   Import users with their basic details via CSV.
                 </p>
               </div>
-              <label className="btn-ghost cursor-pointer border border-dashed border-slate-700 text-xs sm:text-sm">
-                <span>{uploadingUsers ? "Uploading…" : "Select CSV file"}</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  disabled={uploadingUsers}
-                  onChange={handleUserCsvUpload}
-                />
-              </label>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/sample-users.csv"
+                  download
+                  className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Download sample CSV
+                </a>
+                <label className="btn-ghost cursor-pointer border border-dashed border-slate-700 text-xs sm:text-sm">
+                  <span>{uploadingUsers ? "Uploading…" : "Select CSV file"}</span>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    disabled={uploadingUsers}
+                    onChange={handleUserCsvUpload}
+                  />
+                </label>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -338,8 +380,8 @@ export default function SettingsPage() {
 
             <div className="mt-6">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-100">Teams</h3>
-                <span className="text-xs text-slate-500">{teams.length} teams</span>
+                <h3 className="text-sm font-semibold text-black">Teams {teams.length}</h3>
+                {/* <span className="text-xs text-slate-500"> teams</span> */}
               </div>
               <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
@@ -360,7 +402,7 @@ export default function SettingsPage() {
                           ) : (
                             <div className="flex flex-wrap gap-2">
                               {team.users.map((u) => (
-                                <span key={u._id} className="badge bg-slate-800 text-slate-200">{u.fullName}</span>
+                                <span key={u._id} className="badge bg-slate-800 text-slate-200">{u.fullName}{team.captainUserId && team.captainUserId._id === u._id ? ' (c)' : ''}</span>
                               ))}
                             </div>
                           )}
@@ -372,6 +414,12 @@ export default function SettingsPage() {
                           >
                             Delete
                           </button>
+                          <button
+                            className="mt-2 rounded-md border border-gray-300 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50"
+                            onClick={() => openCaptainModal(team._id)}
+                          >
+                            Make captain
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -381,7 +429,47 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {activeTab === "weekly" && (
+          <div className="mt-4">
+            <WeeklyReports />
+          </div>
+        )}
       </section>
+      {captainModalTeamId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-md rounded-lg bg-white p-4 text-gray-900 shadow-xl">
+            <div className="mb-2 text-sm font-medium">Select team captain</div>
+            <div className="max-h-48 overflow-auto rounded-md border border-gray-200">
+              <ul className="divide-y divide-gray-200">
+                {(teams.find(t => t._id === captainModalTeamId)?.users ?? []).map((u) => (
+                  <li key={u._id} className="flex items-center justify-between px-3 py-2">
+                    <span>{u.fullName}</span>
+                    <input
+                      type="radio"
+                      name="captain"
+                      checked={selectedCaptainUserId === u._id}
+                      onChange={() => setSelectedCaptainUserId(u._id)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-3 flex justify-end gap-2">
+              <button className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm" onClick={() => { setCaptainModalTeamId(null); setSelectedCaptainUserId(null); }}>Cancel</button>
+              <button className="rounded-md bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-60" disabled={!selectedCaptainUserId} onClick={saveCaptain}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {uploadingUsers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="rounded-lg bg-white px-6 py-4 text-center shadow-xl">
+            <div className="mb-2 text-sm font-medium text-gray-900">Uploading users…</div>
+            <div className="text-xs text-gray-500">Please wait while we process your CSV.</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,15 +16,25 @@ interface Props {
   data: TeamPerformancePoint[];
 }
 
-const teamColors: Record<string, string> = {
-  Alpha: "#4f46e5",
-  Bravo: "#22c55e",
-  Delta: "#f97316"
-};
+// Generate a deterministic color for each team based on index
+function generatePalette(n: number): string[] {
+  const colors: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const hue = Math.round((360 / Math.max(1, n)) * i);
+    colors.push(`hsl(${hue} 70% 50%)`);
+  }
+  return colors;
+}
 
 export function TeamPerformanceChart({ data }: Props) {
   const weeks = Array.from(new Set(data.map((d) => d.week)));
-  const teams = Array.from(new Set(data.map((d) => d.team)));
+  const teams = Array.from(new Set(data.map((d) => d.team))).sort();
+
+  const palette = generatePalette(teams.length);
+  const colorByTeam: Record<string, string> = teams.reduce((acc, team, idx) => {
+    acc[team] = palette[idx] ?? "#e5e7eb";
+    return acc;
+  }, {} as Record<string, string>);
 
   const chartData = weeks.map((week) => {
     const entry: Record<string, string | number> = { week };
@@ -34,6 +44,8 @@ export function TeamPerformanceChart({ data }: Props) {
     });
     return entry;
   });
+
+  // console.log("chartData", chartData);
 
   return (
     <div className="h-72 w-full">
@@ -53,9 +65,9 @@ export function TeamPerformanceChart({ data }: Props) {
           {teams.map((team) => (
             <Line
               key={team}
-              type="monotone"
+              type="linear"
               dataKey={team}
-              stroke={teamColors[team] ?? "#e5e7eb"}
+              stroke={colorByTeam[team]}
               strokeWidth={2}
               dot={{ r: 3 }}
               activeDot={{ r: 5 }}

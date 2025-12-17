@@ -1,14 +1,20 @@
 import "./globals.css";
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Team Points Dashboard",
-  description: "Monitor team and user performance at a glance."
+  description: "Monitor team and user performance at a glance.",
+  icons: {
+    icon: "/favicon.svg"
+  }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      
       <body className="min-h-screen bg-slate-950 text-slate-50">
         {children}
       </body>

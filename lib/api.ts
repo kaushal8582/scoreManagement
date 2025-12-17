@@ -1,4 +1,5 @@
-export const API_BASE = "https://scoremanagementbackend.onrender.com/api";
+// Allow overriding API base via env for local dev; fallback to production API
+export const API_BASE = "http://localhost:3220/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -70,14 +71,15 @@ export async function fetchTeamStatsByWeek(): Promise<TeamPerformancePoint[]> {
 export async function fetchTopTeams(limit = 3): Promise<{
   team: string;
   totalPoints: number;
+  captain?: string | null;
 }[]> {
   const res = await fetch(`${API_BASE}/dashboard/top-teams?limit=${limit}`, {
     headers: { ...authHeaders() }
   });
   const data = await handleJson<
-    { teamName: string; totalPoints: number }[]
+    { teamName: string; totalPoints: number; captainFullName?: string | null }[]
   >(res);
-  return data.map((d) => ({ team: d.teamName, totalPoints: d.totalPoints }));
+  return data.map((d) => ({ team: d.teamName, totalPoints: d.totalPoints, captain: d.captainFullName ?? null }));
 }
 
 export async function fetchTopPerformers(limit = 3): Promise<{
@@ -149,7 +151,7 @@ export async function fetchTeams() {
   return handleJson<any[]>(res);
 }
 
-export async function updateTeam(id: string, payload: { name?: string; userIds?: string[] }) {
+export async function updateTeam(id: string, payload: { name?: string; userIds?: string[]; captainUserId?: string | null }) {
   const res = await fetch(`${API_BASE}/teams/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -170,6 +172,24 @@ export async function deleteTeam(id: string) {
 export async function uploadWeeklyReport(file: File) {
   const fd = new FormData();
   fd.append("file", file);
+  const res = await fetch(`${API_BASE}/reports/upload-weekly`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+    body: fd
+  });
+  return handleJson<any>(res);
+}
+
+// Enhanced: upload multiple CSVs with explicit week start/end dates
+export async function uploadWeeklyReports(
+  files: File[],
+  weekStartDate: string,
+  weekEndDate: string
+) {
+  const fd = new FormData();
+  files.forEach((f) => fd.append("files", f));
+  fd.append("weekStartDate", weekStartDate);
+  fd.append("weekEndDate", weekEndDate);
   const res = await fetch(`${API_BASE}/reports/upload-weekly`, {
     method: "POST",
     headers: { ...authHeaders() },

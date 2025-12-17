@@ -7,7 +7,7 @@ import {
   fetchTeamStatsByWeek,
   fetchTopTeams,
   fetchTopPerformers,
-  uploadWeeklyReport,
+  uploadWeeklyReports,
   fetchWeeklyReports,
   deleteWeeklyReport,
   type WeeklyReportSummary
@@ -21,7 +21,7 @@ export default function DashboardPage() {
     team: string;
     points: number;
   }[]>([]);
-  const [topTeamsData, setTopTeamsData] = useState<{ team: string; totalPoints: number }[]>([]);
+  const [topTeamsData, setTopTeamsData] = useState<{ team: string; totalPoints: number,captain?: string | null }[]>([]);
   const [topPerformersData, setTopPerformersData] = useState<{
     user: string;
     team: string;
@@ -30,8 +30,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadingReport, setUploadingReport] = useState(false);
-  const [weeklyReports, setWeeklyReports] = useState<WeeklyReportSummary[]>([]);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [weekStartDate, setWeekStartDate] = useState<string>("");
+  const [weekEndDate, setWeekEndDate] = useState<string>("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -39,17 +41,15 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const [stats, teams, performers, reports] = await Promise.all([
+        const [stats, teams, performers] = await Promise.all([
           fetchTeamStatsByWeek(),
           fetchTopTeams(3),
-          fetchTopPerformers(3),
-          fetchWeeklyReports()
+          fetchTopPerformers(3)
         ]);
         if (!mounted) return;
         setPerformanceData(stats);
         setTopTeamsData(teams);
         setTopPerformersData(performers);
-        setWeeklyReports(reports);
       } catch (err: any) {
         if (!mounted) return;
         setError(err.message || "Failed to load dashboard data");
@@ -63,64 +63,49 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    setSelectedFiles(files);
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!weekStartDate || !weekEndDate || selectedFiles.length === 0) return;
     try {
       setError(null);
       setUploadingReport(true);
-      await uploadWeeklyReport(file);
+      await uploadWeeklyReports(selectedFiles, weekStartDate, weekEndDate);
       // Refresh dashboard data
-      const [stats, teams, performers, reports] = await Promise.all([
+      const [stats, teams, performers] = await Promise.all([
         fetchTeamStatsByWeek(),
         fetchTopTeams(3),
-        fetchTopPerformers(3),
-        fetchWeeklyReports()
+        fetchTopPerformers(3)
       ]);
       setPerformanceData(stats);
       setTopTeamsData(teams);
       setTopPerformersData(performers);
-      setWeeklyReports(reports);
+      setSelectedFiles([]);
+      setWeekStartDate("");
+      setWeekEndDate("");
+      setUploadModalOpen(false);
     } catch (err: any) {
       setError(err.message || "Upload failed");
-    }
-    finally {
+    } finally {
       setUploadingReport(false);
     }
   };
 
-  const handleDeleteReport = async (id: string) => {
-    try {
-      setDeletingId(id);
-      setError(null);
-      await deleteWeeklyReport(id);
-      const [stats, teams, performers, reports] = await Promise.all([
-        fetchTeamStatsByWeek(),
-        fetchTopTeams(3),
-        fetchTopPerformers(3),
-        fetchWeeklyReports()
-      ]);
-      setPerformanceData(stats);
-      setTopTeamsData(teams);
-      setTopPerformersData(performers);
-      setWeeklyReports(reports);
-    } catch (err: any) {
-      setError(err.message || "Delete failed");
-    } finally {
-      setDeletingId(null);
-    }
-  };
+  // Weekly reports deletion is handled inside the shared component
 
   return (
     <div className="flex flex-1 flex-col gap-6">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl text-gray-900">
-            Overview
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl text-[#DC2627]">
+           Dashboard
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          {/* <p className="mt-1 text-sm text-gray-500">
             Track how teams and individuals are performing over time.
-          </p>
+          </p> */}
         </div>
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
           <div className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white p-1 text-xs font-medium text-gray-700 sm:text-sm">
@@ -145,18 +130,15 @@ export default function DashboardPage() {
               Monthly
             </button>
           </div>
-          <label className={`btn-ghost cursor-pointer border border-dashed border-gray-300 text-xs sm:text-sm ${uploadingReport ? 'opacity-60 cursor-not-allowed' : ''}`}>
-            <span>{uploadingReport ? 'Uploading…' : 'Upload weekly report CSV'}</span>
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              disabled={uploadingReport}
-              onChange={handleCsvUpload}
-            />
-          </label>
-        </div>
-      </section>
+          <button
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
+            onClick={() => setUploadModalOpen(true)}
+            disabled={uploadingReport}
+          >
+            Upload Weekly Reports
+          </button>
+      </div>
+    </section>
 
       <section className="card p-4 sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-2">
@@ -175,13 +157,70 @@ export default function DashboardPage() {
         <TeamPerformanceChart data={performanceData} />
       </section>
 
+      {uploadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-lg rounded-lg bg-white p-4 text-gray-900 shadow-xl">
+            <div className="mb-2 text-sm font-semibold">Upload weekly reports</div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                type="date"
+                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                value={weekStartDate}
+                onChange={(e) => setWeekStartDate(e.target.value)}
+                disabled={uploadingReport}
+              />
+              <span className="text-xs text-gray-500">to</span>
+              <input
+                type="date"
+                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                value={weekEndDate}
+                onChange={(e) => setWeekEndDate(e.target.value)}
+                disabled={uploadingReport}
+              />
+            </div>
+            <div className="mt-3">
+              <label className={`btn-ghost cursor-pointer border border-dashed border-gray-300 text-xs sm:text-sm ${uploadingReport ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                <span>{selectedFiles.length > 0 ? `${selectedFiles.length} file(s) selected` : 'Select CSV files'}</span>
+                <input
+                  type="file"
+                  accept=".csv"
+                  multiple
+                  className="hidden"
+                  disabled={uploadingReport}
+                  onChange={handleCsvSelect}
+                />
+              </label>
+            </div>
+            {error && (
+              <div className="mt-2 text-xs text-red-600">{error}</div>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
+                onClick={() => { if (!uploadingReport) setUploadModalOpen(false); }}
+                disabled={uploadingReport}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-md bg-brand-600 px-3 py-1 text-sm text-white disabled:opacity-60"
+                onClick={handleUploadSubmit}
+                disabled={uploadingReport || !weekStartDate || !weekEndDate || selectedFiles.length === 0}
+              >
+                {uploadingReport ? 'Uploading…' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="grid gap-4 sm:grid-cols-2">
         <div className="card p-4 sm:p-5">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
               Top 3 teams
             </h2>
-            <span className="text-xs text-gray-500">This period</span>
+            <span className="text-xs text-gray-500">Total Score</span>
           </div>
           <ul className="divide-y divide-gray-200 text-sm">
             {topTeamsData.map((team, index) => (
@@ -193,9 +232,14 @@ export default function DashboardPage() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-800">
                     #{index + 1}
                   </div>
-                  <div>
-                    <div className="font-medium">{team.team}</div>
-                    <div className="text-xs text-gray-500">Total points</div>
+                  <div >
+                    <div className="font-medium">
+                      {team.team}
+                    </div>
+                      {team.captain ? (
+                        <span className=" text-xs text-gray-500">Captain: {team.captain}</span>
+                      ) : null}
+                    {/* <div className="text-xs text-gray-500">Total points</div> */}
                   </div>
                 </div>
                 <div className="text-right text-sm font-semibold text-green-700">
@@ -211,7 +255,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
               Top 3 performers
             </h2>
-            <span className="text-xs text-gray-500">This period</span>
+            <span className="text-xs text-gray-500">Total Score</span>
           </div>
           <ul className="divide-y divide-gray-200 text-sm">
             {topPerformersData.map((perf) => (
@@ -225,7 +269,7 @@ export default function DashboardPage() {
                     <span className="badge bg-gray-200 text-gray-800">
                       {perf.team}
                     </span>
-                    <span>Total points</span>
+                    {/* <span>Total points</span> */}
                   </div>
                 </div>
                 <div className="text-right text-sm font-semibold text-green-700">
@@ -237,45 +281,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="card p-4 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-semibold sm:text-base">Weekly reports</h2>
-            <p className="text-xs text-slate-500 sm:text-sm">Delete a wrong upload; stats recalculate automatically.</p>
-          </div>
-          <span className="text-xs text-slate-500">{weeklyReports.length} weeks</span>
-        </div>
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Week start</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Week end</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Uploaded</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 bg-white">
-              {weeklyReports.map((w) => (
-                <tr key={w._id} className="hover:bg-slate-50">
-                  <td className="px-3 py-2">{new Date(w.weekStartDate).toLocaleDateString()}</td>
-                  <td className="px-3 py-2">{new Date(w.weekEndDate).toLocaleDateString()}</td>
-                  <td className="px-3 py-2">{new Date(w.uploadedAt).toLocaleString()}</td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
-                      disabled={deletingId === w._id}
-                      onClick={() => handleDeleteReport(w._id)}
-                    >
-                      {deletingId === w._id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {/* Weekly reports moved to Settings > Weekly tab as requested */}
     </div>
   );
 }
