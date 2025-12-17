@@ -1,4 +1,4 @@
-export const API_BASE = "http://localhost:3220/api";
+export const API_BASE = "https://scoremanagementbackend.onrender.com/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
