@@ -1,5 +1,5 @@
 // Allow overriding API base via env
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3220/api";
+export const API_BASE = "https://scoremanagementbackend.onrender.com/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
