@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Team Points Dashboard",
   description: "Monitor team and user performance at a glance.",
   icons: {
-    icon: "/favicon.svg"
+    icon: "https://www.bniconnectglobal.com/web/dashboard/favicon.ico"
   }
 };
 

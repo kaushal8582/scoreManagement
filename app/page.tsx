@@ -158,12 +158,12 @@ export default function HomePage() {
           <span>
             Developed by{" "}
             <a
-              href="https://snabbtech.com/"
+              href="https://bni-chandigarh.in/chandigarh-bni-diamonds/en-IN/memberdetails?encryptedMemberId=15%2FEZAjfSifjfpN2xT8tWQ%3D%3D&cmsv3=true&name=Ashish+Garg"
               target="_blank"
               rel="noreferrer"
               className="text-brand-600 underline"
             >
-              SnabbTech
+             Ashish Garg (IT Consultant)
             </a>
           </span>
         </footer>

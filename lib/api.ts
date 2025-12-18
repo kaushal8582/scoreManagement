@@ -1,5 +1,5 @@
-// Allow overriding API base via env for local dev; fallback to production API
-export const API_BASE = "https://scoremanagementbackend.onrender.com/api";
+// Allow overriding API base via env
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3220/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -123,6 +123,60 @@ export async function fetchUserTotals() {
   }[]>(res);
 }
 
+// New: Category totals across all weeks
+export interface CategoryTotals {
+  P: number; A: number; L: number; M: number; S: number;
+  RGI: number; RGO: number; RRI: number; RRO: number;
+  V: number; oneToOne: number; CEU: number; T: number; TYFCB_amount: number;
+  totalPoints: number;
+}
+
+export async function fetchCategoryTotals(): Promise<CategoryTotals> {
+  const res = await fetch(`${API_BASE}/dashboard/category-totals`, {
+    headers: { ...authHeaders() }
+  });
+  return handleJson<CategoryTotals>(res);
+}
+
+// New: Per-user breakdown (optionally filter by teamId)
+export interface UserBreakdownRow {
+  userId: string;
+  fullName: string;
+  teamName?: string;
+  P: number; A: number; L: number; M: number; S: number;
+  RGI: number; RGO: number; RRI: number; RRO: number;
+  V: number; oneToOne: number; CEU: number; T: number; TYFCB_amount: number;
+  totalPoints: number;
+}
+
+export async function fetchUserBreakdown(limit = 7, teamId?: string): Promise<UserBreakdownRow[]> {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  if (teamId) params.set('teamId', teamId);
+  const res = await fetch(`${API_BASE}/dashboard/user-breakdown?${params.toString()}`, {
+    headers: { ...authHeaders() }
+  });
+  return handleJson<UserBreakdownRow[]>(res);
+}
+
+// New: Per-team breakdown
+export interface TeamBreakdownRow {
+  teamId: string;
+  teamName: string;
+  P: number; A: number; L: number; M: number; S: number;
+  RGI: number; RGO: number; RRI: number; RRO: number;
+  V: number; oneToOne: number; CEU: number; T: number; TYFCB_amount: number;
+  totalPoints: number;
+  captainFullName?: string | null;
+}
+
+export async function fetchTeamBreakdown(): Promise<TeamBreakdownRow[]> {
+  const res = await fetch(`${API_BASE}/dashboard/team-breakdown`, {
+    headers: { ...authHeaders() }
+  });
+  return handleJson<TeamBreakdownRow[]>(res);
+}
+
 export async function uploadUsersCsv(file: File) {
   const fd = new FormData();
   fd.append("file", file);
@@ -132,6 +186,27 @@ export async function uploadUsersCsv(file: File) {
     body: fd
   });
   return handleJson<any>(res);
+}
+
+// Download sample users Excel (.xls) file
+export async function downloadUsersSampleXls() {
+  const res = await fetch(`${API_BASE}/users/sample-xls`, {
+    method: "GET",
+    headers: { ...authHeaders() }
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to download sample XLS");
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sample-users.xls";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 // Teams

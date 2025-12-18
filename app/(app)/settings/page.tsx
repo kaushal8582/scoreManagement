@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchUsers, uploadUsersCsv, createTeam, fetchTeams, fetchUserTotals, deleteTeam, updateTeam } from "../../../lib/api";
+import { fetchUsers, uploadUsersCsv, createTeam, fetchTeams, fetchUserTotals, deleteTeam, updateTeam, downloadUsersSampleXls} from "../../../lib/api";
 import WeeklyReports from "../../../components/WeeklyReports";
 
 type TabKey = "upload" | "teams" | "weekly";
@@ -199,26 +199,32 @@ export default function SettingsPage() {
           <div className="mt-4 space-y-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-black sm:text-base">
-                  Upload users CSV
-                </h2>
-                <p className="text-xs text-slate-400 sm:text-sm">
-                  Import users with their basic details via CSV.
-                </p>
+                {/* Previous title preserved; commenting to avoid removal */}
+                {/* <h2 className="text-sm font-semibold text-black sm:text-base">Upload users CSV</h2> */}
+                <h2 className="text-sm font-semibold text-black sm:text-base">Upload users Excel (.xls/.xlsx)</h2>
+                {/* <p className="text-xs text-slate-400 sm:text-sm">Import users with their basic details via CSV.</p> */}
+                <p className="text-xs text-slate-400 sm:text-sm">Import users with their basic details via Excel (.xls/.xlsx).</p>
               </div>
               <div className="flex items-center gap-2">
-                <a
-                  href="/sample-users.csv"
-                  download
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await downloadUsersSampleXls();
+                    } catch (e) {
+                      console.error(e);
+                      alert('Failed to download sample .xls file');
+                    }
+                  }}
                   className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
                 >
-                  Download sample CSV
-                </a>
+                  Download sample Excel (.xls)
+                </button>
                 <label className="btn-ghost cursor-pointer border border-dashed border-slate-700 text-xs sm:text-sm">
-                  <span>{uploadingUsers ? "Uploading…" : "Select CSV file"}</span>
+                  <span>{uploadingUsers ? "Uploading…" : "Select Excel/CSV file (.xls/.xlsx/.csv)"}</span>
                   <input
                     type="file"
-                    accept=".csv"
+                    accept=".xls,.xlsx,.csv"
                     className="hidden"
                     disabled={uploadingUsers}
                     onChange={handleUserCsvUpload}
@@ -236,8 +242,33 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     placeholder="Search users..."
-                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder:text-slate-400 focus:outline-none"
+                    className="
+    w-full
+    bg-white
+    px-3
+    py-[11px]
+    text-black 
+    border-0
+    rounded-[3px]
+    appearance-none
+    border-b-[3px] border-b-[#DF2020]
+    focus:border-b-[#DF2020]
+    focus:border-b-[2px]
+    
+    focus:outline-none
+  "
                     value={userSearch}
+                     style={{
+                // backgroundColor: "white",
+                // padding: "11px",
+                // borderRadius: "3px",
+                // color: "black",
+                // border: "0px",
+                boxShadow:
+                  "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
+                appearance: "none",
+                // borderBottom: "3px solid #DF2020",
+              }}
                     onChange={(e) => { setUserSearch(e.target.value); setCurrentPage(1); }}
                   />
                   <span className="text-xs text-slate-500">
@@ -317,10 +348,35 @@ export default function SettingsPage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-slate-700 bg-gray-300 px-3 py-2 text-sm text-black placeholder:text-slate-500  focus:outline-none"
+                 className="
+    w-full
+    bg-white
+    px-3
+    py-[11px]
+    text-black 
+    border-0
+    rounded-[3px]
+    appearance-none
+    border-b-[3px] border-b-[#DF2020]
+    focus:border-b-[#DF2020]
+    focus:border-b-[2px]
+    
+    focus:outline-none
+  "
                   placeholder="e.g. Alpha Squad"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
+                   style={{
+                // backgroundColor: "white",
+                // padding: "11px",
+                // borderRadius: "3px",
+                // color: "black",
+                // border: "0px",
+                boxShadow:
+                  "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
+                appearance: "none",
+                // borderBottom: "3px solid #DF2020",
+              }}
                 />
               </div>
 
@@ -335,9 +391,34 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     placeholder="Search members..."
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder:text-slate-400 focus:outline-none"
+                    className="
+    w-full
+    bg-white
+    px-3
+    py-[11px]
+    text-black 
+    border-0
+    rounded-[3px]
+    appearance-none
+    border-b-[3px] border-b-[#DF2020]
+    focus:border-b-[#DF2020]
+    focus:border-b-[2px]
+    
+    focus:outline-none
+  "
                     value={memberSearch}
                     onChange={(e) => setMemberSearch(e.target.value)}
+                    style={{
+                // backgroundColor: "white",
+                // padding: "11px",
+                // borderRadius: "3px",
+                // color: "black",
+                // border: "0px",
+                boxShadow:
+                  "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
+                appearance: "none",
+                // borderBottom: "3px solid #DF2020",
+              }}
                   />
                 </div>
                 <div className="max-h-40 space-y-1 overflow-auto rounded-lg border border-slate-300 bg-white p-2 text-sm">
@@ -462,14 +543,14 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-      {uploadingUsers && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="rounded-lg bg-white px-6 py-4 text-center shadow-xl">
-            <div className="mb-2 text-sm font-medium text-gray-900">Uploading users…</div>
-            <div className="text-xs text-gray-500">Please wait while we process your CSV.</div>
-          </div>
-        </div>
-      )}
+            {uploadingUsers && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="rounded-lg bg-white px-6 py-4 text-center shadow-xl">
+                  <div className="mb-2 text-sm font-medium text-gray-900">Uploading users…</div>
+                  <div className="text-xs text-gray-500">Please wait while we process your Excel/CSV.</div>
+                </div>
+              </div>
+            )}
     </div>
   );
 }
