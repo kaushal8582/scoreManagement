@@ -91,6 +91,10 @@ export default function SettingsPage() {
       setCreatingTeam(true);
       await createTeam(teamName, selectedUserIds);
       const teamsData = await fetchTeams();
+      const usersData = await fetchUsers();
+      const totals = await fetchUserTotals();
+      setUsers(usersData as any);
+      
       setTeams(teamsData as any);
       setTeamName("");
       setSelectedUserIds([]);
@@ -111,6 +115,11 @@ export default function SettingsPage() {
     try {
       await deleteTeam(id);
       const teamsData = await fetchTeams();
+      const usersData = await fetchUsers();
+      const totals = await fetchUserTotals();
+      const totalsMap: Record<string, number> = {};
+      totals.forEach(t => { totalsMap[t.userId] = t.totalPoints; });
+      setUsers(usersData as any);
       setTeams(teamsData as any);
     } catch (err: any) {
       setError(err.message || "Failed to delete team");
@@ -127,6 +136,11 @@ export default function SettingsPage() {
     try {
       await updateTeam(captainModalTeamId, { captainUserId: selectedCaptainUserId ?? null });
       const teamsData = await fetchTeams();
+      const usersData = await fetchUsers();
+      const totals = await fetchUserTotals();
+      const totalsMap: Record<string, number> = {};
+      totals.forEach(t => { totalsMap[t.userId] = t.totalPoints; });
+      setUsers(usersData as any);
       setTeams(teamsData as any);
     } catch (err: any) {
       setError(err.message || "Failed to set captain");
@@ -155,7 +169,7 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-          Manage users, teams, and data imports for your dashboard.
+         Manage members, power teams, and weekly report for your dashboard.
         </p>
       </section>
 
@@ -201,9 +215,9 @@ export default function SettingsPage() {
               <div>
                 {/* Previous title preserved; commenting to avoid removal */}
                 {/* <h2 className="text-sm font-semibold text-black sm:text-base">Upload users CSV</h2> */}
-                <h2 className="text-sm font-semibold text-black sm:text-base">Upload users Excel (.xls/.xlsx)</h2>
+                <h2 className="text-sm font-semibold text-black sm:text-base">Upload members Excel (.xls/.xlsx)</h2>
                 {/* <p className="text-xs text-slate-400 sm:text-sm">Import users with their basic details via CSV.</p> */}
-                <p className="text-xs text-slate-400 sm:text-sm">Import users with their basic details via Excel (.xls/.xlsx).</p>
+                <p className="text-xs text-slate-400 sm:text-sm">Import members with their basic details via Excel (.xls/.xlsx).</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -220,7 +234,7 @@ export default function SettingsPage() {
                 >
                   Download sample Excel (.xls)
                 </button>
-                <label className="btn-ghost cursor-pointer border border-dashed border-slate-700 text-xs sm:text-sm">
+                <label className=" cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50">
                   <span>{uploadingUsers ? "Uploading…" : "Select Excel/CSV file (.xls/.xlsx/.csv)"}</span>
                   <input
                     type="file"
@@ -235,10 +249,8 @@ export default function SettingsPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Users
-                </h3>
-                <div className="flex items-center gap-2">
+               
+                {/* <div className="flex items-center gap-2">
                   <input
                     type="text"
                     placeholder="Search users..."
@@ -274,7 +286,7 @@ export default function SettingsPage() {
                   <span className="text-xs text-slate-500">
                     {loading ? "Loading…" : error ? "Error" : `${filteredUsers.length} users`}
                   </span>
-                </div>
+                </div> */}
               </div>
               <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
@@ -336,8 +348,7 @@ export default function SettingsPage() {
                 Create team
               </h2>
               <p className="text-xs text-slate-400 sm:text-sm">
-                Group users into teams to compare performance across the
-                organization. This is a mocked flow for UI only.
+               Group members into power teams to compare performance across the BNI.
               </p>
             </div>
 

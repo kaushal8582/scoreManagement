@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 
 export interface PieDatum {
-  label: string;
+    label: string;
   value: number;
   color?: string;
   meta?: Record<string, any>;
@@ -13,6 +13,7 @@ interface CircleChartProps {
   data: PieDatum[];
   size?: number; // diameter in px
   strokeWidth?: number; // pie thickness
+  className?: string;
 }
 
 const DEFAULT_COLORS = [
@@ -32,8 +33,8 @@ const DEFAULT_COLORS = [
 
 // Optional mapping for known categories to stable colors
 const CATEGORY_COLORS: Record<string, string> = {
-  P: "#2563EB",
-  A: "#EF4444",
+  Present: "#2563EB",
+  Absent: "#EF4444",
   L: "#F59E0B",
   M: "#A855F7",
   S: "#06B6D4",
@@ -41,11 +42,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   RGO: "#84CC16",
   RRI: "#10B981",
   RRO: "#2DD4BF",
-  V: "#8B5CF6",
-  oneToOne: "#F43F5E",
+  Visitor: "#8B5CF6",
+  121: "#F43F5E",
   CEU: "#FF7F50",
-  T: "#0EA5E9",
-  TYFCB_amount: "#D946EF"
+  Testimonial: "#0EA5E9",
+  TYFCB: "#D946EF"
 };
 
 function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
@@ -63,7 +64,7 @@ function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle
   ].join(" ");
 }
 
-export function CircleChart({ data, size = 180, strokeWidth = 24 }: CircleChartProps) {
+export function CircleChart({ data, size = 180, strokeWidth = 24, className = "" }: CircleChartProps) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [mouse, setMouse] = useState<{x:number;y:number}>({x:0,y:0});
 
@@ -88,7 +89,7 @@ export function CircleChart({ data, size = 180, strokeWidth = 24 }: CircleChartP
 
   return (
     <div
-      className="relative"
+      className={`relative flex flex-col items-center justify-center ${className} `}
       onMouseMove={(e) => {
         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
         setMouse({ x: e.clientX - rect.left, y: e.clientY - rect.top });

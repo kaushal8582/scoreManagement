@@ -38,7 +38,7 @@ export default function HomePage() {
 
   return (
     <main style={{background:"rgb(200, 201, 199)"}} className="flex min-h-screen items-center justify-center  px-4">
-      <div className="card w-full max-w-md p-8 relative">
+      <div className="card w-full max-w-md p-8 relative !rounded-none">
         <div className="mb-6 text-center">
           {/* <div className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-brand-100 ring-1 ring-brand-500/40">
             Team Points Dashboard
@@ -145,7 +145,7 @@ export default function HomePage() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               type="submit"
-              className="btn-primary !w-[120px] px-3 py-1.5 text-sm disabled:opacity-60"
+              className="btn-primary !w-[120px] px-3 py-1.5 text-sm disabled:opacity-60 !rounded-[4px]"
               disabled={loading || !email || !password}
               onClick={(e) => handleSubmit(e, "login")}
             >

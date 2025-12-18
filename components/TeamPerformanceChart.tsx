@@ -56,7 +56,7 @@ export function TeamPerformanceChart({ data }: Props) {
           <YAxis stroke="#9ca3af" tickLine={false} />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#020617",
+              backgroundColor: "#f5f6f7ff",
               border: "1px solid #1f2937",
               borderRadius: 8
             }}

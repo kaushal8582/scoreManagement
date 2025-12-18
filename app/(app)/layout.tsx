@@ -30,7 +30,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-gray-100 text-gray-900">
       <header
-        className="border-b border-gray-200 bg-[#DC2627]"
+        className=" border-gray-200 bg-[#DC2627]"
         style={{
           boxShadow:
             "0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12)",
@@ -76,6 +76,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <rect x="0" y="0" width="275" height="38" fill="url(#pattern0)" />
             </svg> */}
             <svg
+            onClick={() => router.push("/dashboard")}
               width="275"
               height="38"
               viewBox="0 0 275 38"

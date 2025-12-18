@@ -13,7 +13,7 @@ import {
   type WeeklyReportSummary,
   fetchCategoryTotals,
   fetchUserBreakdown,
-  fetchTeamBreakdown
+  fetchTeamBreakdown,
 } from "../../../lib/api";
 import { BuildingChart } from "../../../components/BuildingChart";
 import { CircleChart } from "../../../components/CircleChart";
@@ -21,59 +21,41 @@ import { CircleChart } from "../../../components/CircleChart";
 
 export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>("weekly");
-  const data: any[] = [
-  {
-    name: "ANUBHA SOOD",
-    P: 1200,
-    A: 800,
-    L: 600,
-    M: 400,
-    S: 300,
-    RGI: 900,
-    RGO: 700,
-    RRI: 500,
-    RRO: 200,
-    V: 350,
-    oneToOne: 450,
-    CEU: 250,
-    T: 300,
-    TYFCB_amount: 0
-  },
-  {
-    name: "Mridul Arora",
-    P: 1000,
-    A: 600,
-    L: 500,
-    M: 300,
-    S: 200,
-    RGI: 700,
-    RGO: 400,
-    RRI: 300,
-    RRO: 150,
-    V: 250,
-    oneToOne: 350,
-    CEU: 200,
-    T: 180,
-    TYFCB_amount: 0
-  }
-];
+  
 
-
-  const [performanceData, setPerformanceData] = useState<{
-    week: string;
-    team: string;
-    points: number;
-  }[]>([]);
-  const [topTeamsData, setTopTeamsData] = useState<{ team: string; totalPoints: number,captain?: string | null }[]>([]);
-  const [topPerformersData, setTopPerformersData] = useState<{
-    user: string;
-    team: string;
-    totalPoints: number;
-  }[]>([]);
+  const [performanceData, setPerformanceData] = useState<
+    {
+      week: string;
+      team: string;
+      points: number;
+    }[]
+  >([]);
+  const [topTeamsData, setTopTeamsData] = useState<
+    { team: string; totalPoints: number; captain?: string | null }[]
+  >([]);
+  const [topPerformersData, setTopPerformersData] = useState<
+    {
+      user: string;
+      team: string;
+      totalPoints: number;
+    }[]
+  >([]);
   const [categoryTotals, setCategoryTotals] = useState<{
-    P: number; A: number; L: number; M: number; S: number;
-    RGI: number; RGO: number; RRI: number; RRO: number;
-    V: number; oneToOne: number; CEU: number; T: number; TYFCB_amount: number; totalPoints: number
+    P: number;
+    A: number;
+    L: number;
+    M: number;
+    S: number;
+    RGI: number;
+    RGO: number;
+    RRI: number;
+    RRO: number;
+    V: number;
+    oneToOne: number;
+    CEU: number;
+    T: number;
+    TYFCB_amount: number;
+    totalPoints: number;
   } | null>(null);
   const [userBreakdown, setUserBreakdown] = useState<any[]>([]);
   const [teamBreakdown, setTeamBreakdown] = useState<any[]>([]);
@@ -85,8 +67,7 @@ export default function DashboardPage() {
   const [weekEndDate, setWeekEndDate] = useState<string>("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-
-  console.log("userbre",userBreakdown)
+  console.log("userbre", userBreakdown);
 
   useEffect(() => {
     let mounted = true;
@@ -94,14 +75,15 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const [stats, teams, performers, totals, usersB, teamsB] = await Promise.all([
-          fetchTeamStatsByWeek(),
-          fetchTopTeams(3),
-          fetchTopPerformers(3),
-          fetchCategoryTotals(),
-          fetchUserBreakdown(7),
-          fetchTeamBreakdown()
-        ]);
+        const [stats, teams, performers, totals, usersB, teamsB] =
+          await Promise.all([
+            fetchTeamStatsByWeek(),
+            fetchTopTeams(3),
+            fetchTopPerformers(3),
+            fetchCategoryTotals(),
+            fetchUserBreakdown(7),
+            fetchTeamBreakdown(),
+          ]);
         if (!mounted) return;
         setPerformanceData(stats);
         setTopTeamsData(teams);
@@ -134,14 +116,15 @@ export default function DashboardPage() {
       setUploadingReport(true);
       await uploadWeeklyReports(selectedFiles, weekStartDate, weekEndDate);
       // Refresh ALL dashboard data to reflect upload everywhere
-      const [stats, teams, performers, totals, usersB, teamsB] = await Promise.all([
-        fetchTeamStatsByWeek(),
-        fetchTopTeams(3),
-        fetchTopPerformers(3),
-        fetchCategoryTotals(),
-        fetchUserBreakdown(7),
-        fetchTeamBreakdown()
-      ]);
+      const [stats, teams, performers, totals, usersB, teamsB] =
+        await Promise.all([
+          fetchTeamStatsByWeek(),
+          fetchTopTeams(3),
+          fetchTopPerformers(3),
+          fetchCategoryTotals(),
+          fetchUserBreakdown(7),
+          fetchTeamBreakdown(),
+        ]);
       setPerformanceData(stats);
       setTopTeamsData(teams);
       setTopPerformersData(performers);
@@ -159,6 +142,9 @@ export default function DashboardPage() {
     }
   };
 
+
+  
+
   // Weekly reports deletion is handled inside the shared component
 
   return (
@@ -166,7 +152,7 @@ export default function DashboardPage() {
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-xl font-semibold tracking-tight sm:text-2xl text-[#DC2627]">
-           Dashboard
+            Dashboard
           </h1>
           {/* <p className="mt-1 text-sm text-gray-500">
             Track how teams and individuals are performing over time.
@@ -184,7 +170,7 @@ export default function DashboardPage() {
             >
               Weekly
             </button>
-            <button
+            {/* <button
               className={`flex-1 rounded-full px-3 py-1 transition ${
                 timeframe === "monthly"
                   ? "bg-brand-600 text-white"
@@ -193,7 +179,7 @@ export default function DashboardPage() {
               onClick={() => setTimeframe("monthly")}
             >
               Monthly
-            </button>
+            </button> */}
           </div>
           <button
             className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
@@ -202,34 +188,51 @@ export default function DashboardPage() {
           >
             Upload Weekly Reports
           </button>
-      </div>
-    </section>
-     {categoryTotals && (
+        </div>
+      </section>
+      {categoryTotals && (
         <section className="card p-4 sm:p-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900 sm:text-base">Total Points by Category</h2>
-            <span className="badge bg-green-100 text-green-700">{loading ? "Loading…" : error ? "Error" : "Live data"}</span>
+            <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
+              Overall Stats
+            </h2>
+            <span className="badge bg-green-100 text-green-700">
+              {loading ? "Loading…" : error ? "Error" : "Live data"}
+            </span>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
             {[
-              { k: 'P', label: 'P' },
-              { k: 'A', label: 'A' },
-              { k: 'L', label: 'L' },
-              { k: 'M', label: 'M' },
-              { k: 'S', label: 'S' },
-              { k: 'RGI', label: 'RGI' },
-              { k: 'RGO', label: 'RGO' },
-              { k: 'RRI', label: 'RRI' },
-              { k: 'RRO', label: 'RRO' },
-              { k: 'V', label: 'V' },
-              { k: 'oneToOne', label: '121' },
-              { k: 'TYFCB_amount', label: 'TYFCB Amount' },
-              { k: 'CEU', label: 'CEU' },
-              { k: 'T', label: 'T' },
+              { k: "P", label: "Present", tooltip: "Present" },
+              { k: "A", label: "Absent", tooltip: "Absent" },
+              { k: "L", label: "Late", tooltip: "Late" },
+              { k: "M", label: "Medical", tooltip: "Medical" },
+              { k: "S", label: "Substitute", tooltip: "Substitute" },
+              { k: "RGI", label: "RGI", tooltip: "Referrals Given Inside" },
+              { k: "RGO", label: "RGO", tooltip: "Referrals Given Outside" },
+              { k: "RRI", label: "RRI", tooltip: "Referrals Received Inside" },
+              { k: "RRO", label: "RRO", tooltip: "Referrals Received Outside" },
+              { k: "V", label: "Visitors", tooltip: "Visitors" },
+              { k: "oneToOne", label: "1-2-1", tooltip: "One to One Meetings Held" },
+              { k: "TYFCB_amount", label: "TYFCB", tooltip: "Thank You For Closed Business" },
+              { k: "CEU", label: "CEU", tooltip: "Chapter Education Units" },
+              { k: "T", label: "Testimonials", tooltip: "Testimonials" },
             ].map((item) => (
-              <div key={item.k} className="rounded-md border border-gray-200 bg-white p-3">
-                <div className="text-xs text-gray-500">{item.label}</div>
-                <div className="mt-1 text-sm font-semibold text-green-700">{(categoryTotals as any)[item.k]?.toLocaleString?.() ?? (categoryTotals as any)[item.k]}</div>
+              <div
+                key={item.k}
+                className="rounded-md border border-gray-200 bg-white p-3"
+              >
+                <div className="relative group text-xs text-gray-500 ">
+                  {item.label}
+
+                  <div className="absolute hidden group-hover:block -top-2 left-1/2 -translate-x-1/2 -translate-y-full rounded bg-black px-2 py-1 text-xs text-white whitespace-nowrap">
+                    {item.tooltip}
+                  </div>
+                </div>
+
+                <div className="mt-1 text-sm font-semibold text-green-700">
+                  {(categoryTotals as any)[item.k]?.toLocaleString?.() ??
+                    (categoryTotals as any)[item.k]}
+                </div>
               </div>
             ))}
           </div>
@@ -240,10 +243,11 @@ export default function DashboardPage() {
         <div className="mb-4 flex items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
-              Team performance
+             Power Team performance
             </h2>
             <p className="text-xs text-gray-500 sm:text-sm">
-              Total points per team by {timeframe === "weekly" ? "week" : "month"}.
+              Total points per team by{" "}
+              {timeframe === "weekly" ? "week" : "month"}.
             </p>
           </div>
           <span className="badge bg-green-100 text-green-700">
@@ -253,12 +257,12 @@ export default function DashboardPage() {
         <TeamPerformanceChart data={performanceData} />
       </section>
 
-     
-
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-lg rounded-lg bg-white p-4 text-gray-900 shadow-xl">
-            <div className="mb-2 text-sm font-semibold">Upload weekly reports</div>
+            <div className="mb-2 text-sm font-semibold">
+              Upload weekly reports
+            </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="date"
@@ -277,8 +281,16 @@ export default function DashboardPage() {
               />
             </div>
             <div className="mt-3">
-              <label className={`btn-ghost cursor-pointer border border-dashed border-gray-300 text-xs sm:text-sm ${uploadingReport ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                <span>{selectedFiles.length > 0 ? `${selectedFiles.length} file(s) selected` : 'Select Excel/CSV files'}</span>
+              <label
+                className={`btn-ghost cursor-pointer border border-dashed border-gray-300 text-xs sm:text-sm ${
+                  uploadingReport ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                <span>
+                  {selectedFiles.length > 0
+                    ? `${selectedFiles.length} file(s) selected`
+                    : "Select Excel/CSV files"}
+                </span>
                 <input
                   type="file"
                   accept=".xls,.xlsx,.csv"
@@ -289,13 +301,15 @@ export default function DashboardPage() {
                 />
               </label>
             </div>
-            {error && (
-              <div className="mt-2 text-xs text-red-600">{error}</div>
-            )}
+            {error && <div className="mt-2 text-xs text-red-600">{error}</div>}
             <div className="mt-4 flex justify-end gap-2">
               <button
-                className={`rounded-md border border-gray-300 bg-white px-3 py-1 text-sm ${uploadingReport ? 'opacity-60 cursor-not-allowed' : ''}`}
-                onClick={() => { if (!uploadingReport) setUploadModalOpen(false); }}
+                className={`rounded-md border border-gray-300 bg-white px-3 py-1 text-sm ${
+                  uploadingReport ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+                onClick={() => {
+                  if (!uploadingReport) setUploadModalOpen(false);
+                }}
                 // disabled={uploadingReport}'
                 disabled={uploadingReport}
               >
@@ -304,9 +318,14 @@ export default function DashboardPage() {
               <button
                 className="rounded-md bg-brand-600 px-3 py-1 text-sm text-white disabled:opacity-60"
                 onClick={handleUploadSubmit}
-                disabled={uploadingReport || !weekStartDate || !weekEndDate || selectedFiles.length === 0}
+                disabled={
+                  uploadingReport ||
+                  !weekStartDate ||
+                  !weekEndDate ||
+                  selectedFiles.length === 0
+                }
               >
-                {uploadingReport ? 'Uploading…' : 'Upload'}
+                {uploadingReport ? "Uploading…" : "Upload"}
               </button>
             </div>
           </div>
@@ -316,9 +335,14 @@ export default function DashboardPage() {
       {/* Top teams – show three category circle charts like See more page */}
       <section className="card p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900 sm:text-base">Top teams</h2>
-          <button className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50" onClick={() => window.location.href = '/power-teams'}>
-            See more
+          <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
+            Top 3 teams
+          </h2>
+          <button
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => (window.location.href = "/power-teams")}
+          >
+            Show all
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -327,29 +351,43 @@ export default function DashboardPage() {
             .sort((a: any, b: any) => b.totalPoints - a.totalPoints)
             .slice(0, 3)
             .map((t: any) => (
-              <div key={t.teamId} className="rounded-lg border border-gray-200 bg-white p-3">
+              <div
+                key={t.teamId}
+                className="rounded-lg border border-gray-200 bg-white p-3"
+              >
                 <div className="mb-2 flex items-center justify-between">
-                  <div className="text-sm font-semibold text-gray-900">{t.teamName}</div>
-                  <div className="text-xs text-gray-500">{t.totalPoints.toLocaleString()}</div>
+                  <div className="text-sm flex flex-col font-semibold text-gray-900">
+                    {t.teamName}
+                    <span className="text-xs text-gray-500">
+                     Captain : {t.captainFullName}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                  Total Points:   {t.totalPoints.toLocaleString()}
+                  </div>
                 </div>
-                <CircleChart data={(() => {
-                  const presentPoints = (t.P + t.L + t.M + t.S) * 2;
-                  const absentPoints = Math.abs(t.A * -2);
-                  const tyfcbPoints = Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
-                  return [
-                    { label: 'Present', value: presentPoints },
-                    { label: 'Absent', value: absentPoints },
-                    { label: 'RGI', value: t.RGI * 5 },
-                    { label: 'RGO', value: t.RGO * 5 },
-                    { label: 'RRI', value: t.RRI * 5 },
-                    { label: 'RRO', value: t.RRO * 5 },
-                    { label: 'Visitor', value: t.V * 10 },
-                    { label: '121', value: t.oneToOne * 5 },
-                    { label: 'Testimonial', value: t.CEU * 5 },
-                    { label: 'Training', value: t.T * 5 },
-                    { label: 'TYFCB', value: tyfcbPoints },
-                  ];
-                })()} />
+                <CircleChart
+                  className="flex-col"
+                  data={(() => {
+                    const presentPoints = (t.P + t.L + t.M + t.S) * 2;
+                    const absentPoints = Math.abs(t.A * -2);
+                    const tyfcbPoints =
+                      Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+                    return [
+                      { label: "Present", value: presentPoints },
+                      { label: "Absent", value: absentPoints },
+                      { label: "RGI", value: t.RGI * 5 },
+                      { label: "RGO", value: t.RGO * 5 },
+                      { label: "RRI", value: t.RRI * 5 },
+                      { label: "RRO", value: t.RRO * 5 },
+                      { label: "Visitor", value: t.V * 10 },
+                      { label: "121", value: t.oneToOne * 5 },
+                      { label: "Testimonial", value: t.CEU * 5 },
+                      { label: "Training", value: t.T * 5 },
+                      { label: "TYFCB", value: tyfcbPoints },
+                    ];
+                  })()}
+                />
               </div>
             ))}
         </div>
@@ -358,21 +396,32 @@ export default function DashboardPage() {
       {/* Top performers – full width stacked bar */}
       <section className="card p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900 sm:text-base">Top performers breakdown</h2>
-          <span className="text-xs text-gray-500">Stacked by category</span>
+          <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
+            Top 7 performers
+          </h2>
+          {/* <span className="text-xs text-gray-500">Stacked by category</span> */}
         </div>
         <BuildingChart
           data={userBreakdown.map((item) => {
             const presentPoints = (item.P + item.L + item.M + item.S) * 2;
             const absentPoints = item.A * -2;
-            const referralPoints = (item.RGI + item.RGO + item.RRI + item.RRO) * 5;
+            const referralPoints =
+              (item.RGI + item.RGO + item.RRI + item.RRO) * 5;
             const visitorPoints = item.V * 10;
             const oneToOnePoints = item.oneToOne * 5; // 121
             const testimonialPoints = item.CEU * 5;
             const trainingPoints = item.T * 5;
             const tyfcbPoints = Math.floor((item.TYFCB_amount || 0) / 1000) * 1;
 
-            const computedTotal = presentPoints + absentPoints + referralPoints + visitorPoints + oneToOnePoints + testimonialPoints + trainingPoints + tyfcbPoints;
+            const computedTotal =
+              presentPoints +
+              absentPoints +
+              referralPoints +
+              visitorPoints +
+              oneToOnePoints +
+              testimonialPoints +
+              trainingPoints +
+              tyfcbPoints;
 
             return {
               name: item.fullName,
@@ -400,5 +449,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
