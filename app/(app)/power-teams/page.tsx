@@ -29,10 +29,9 @@ export default function PowerTeamsPage() {
         // Load per-team member breakdowns (request all members for each team)
         const entries = await Promise.all(
           t.map((team: any) =>
-            fetchUserBreakdown(team?.teamMembersCount || 50, team.teamId).then((rows) => [
-              team.teamId,
-              rows,
-            ])
+            fetchUserBreakdown(team?.teamMembersCount || 50, team.teamId).then(
+              (rows) => [team.teamId, rows]
+            )
           )
         );
         const map: Record<string, any[]> = {};
@@ -89,43 +88,106 @@ export default function PowerTeamsPage() {
                 ) : null}
               </div>
               <div className="text-sm font-semibold text-green-700">
-              Total Points :  {t.totalPoints.toLocaleString()}
+                Total Points : {t.totalPoints.toLocaleString()}
               </div>
             </div>
             <div className="flex flex-col gap-4">
-                 <div>
-                <div className="text-xs font-medium text-gray-600 mb-2">Overall Stats</div>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-                  {(() => {
-                    const presentPoints = (t.P + t.L + t.M + t.S) * 2;
-                    const absentPoints = t.A * -2;
-                    const tyfcbPoints = Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
-                    const items = [
-                      { k: "P", label: "Present", v: presentPoints , tooltip: "Present" },
-                      { k: "A", label: "Absent", v: absentPoints , tooltip: "Absent" },
-                      { k: "L", label: "Late", v: 0 ,tooltip:"Late"},
-                      { k: "M", label: "Medical", v: 0 ,tooltip:"Medical"},
-                      { k: "S", label: "Substitute", v: 0 ,tooltip:"Substitute"},
-                      { k: "RGI", label: "RGI", v: t.RGI * 5,tooltip:'Referrals Given Inside' },
-                      { k: "RGO", label: "RGO", v: t.RGO * 5,tooltip:'Referrals Given Outside' },
-                      { k: "RRI", label: "RRI", v: t.RRI * 5,tooltip:'Referrals Received Inside' },
-                      { k: "RRO", label: "RRO", v: t.RRO * 5,tooltip:'Referrals Received Outside' },
-                      { k: "V", label: "Visitors", v: t.V * 10,tooltip:'Visitors' },
-                      { k: "oneToOne", label: "121", v: t.oneToOne * 5,tooltip:'One to One Meetings Held' },
-                      { k: "TYFCB_amount", label: "TYFCB", v: tyfcbPoints,tooltip:'Thank You For Closed Business' },
-                      { k: "CEU", label: "CEU", v: t.CEU * 5,tooltip:'Chapter Education Units' },
-                      { k: "T", label: "Testimonials", v: t.T * 5,tooltip:'Testimonials' },
-                    ];
-                    return items.map((item) => (
-                      <div key={item.k} className="rounded-md border border-gray-200 bg-white p-3">
-                        <div className="relative group text-xs text-gray-500 ">
-                  {item.label}
-
-                  <div className="absolute hidden group-hover:block -top-2 left-1/2 -translate-x-1/2 -translate-y-full rounded bg-black px-2 py-1 text-xs text-white whitespace-nowrap">
-                    {item.tooltip}
-                  </div>
+              <div>
+                <div className="text-xs font-medium text-gray-600 mb-2">
+                  Overall Stats
                 </div>
-                        <div className="mt-1 text-sm font-semibold text-green-700">{item.v.toLocaleString()}</div>
+                <div className="grid grid-cols-2 sm:grid-cols-8 gap-3">
+                  {(() => {
+                    // ===== POINT CALCULATIONS =====
+                    const attendancePoints =
+                      (t.P + t.L + t.M + t.S) * 2 + t.A * -2;
+
+                    const referralsGivenPoints = (t.RGI + t.RGO) * 5;
+                    const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
+
+                    const visitorsPoints = t.V * 10;
+                    const oneToOnePoints = t.oneToOne * 5;
+
+                    const tyfcbPoints =
+                      Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+
+                    const trainingPoints = t.CEU * 5;
+                    const testimonialsPoints = t.T * 5;
+
+                    // ===== FINAL 8 BOXES =====
+                    const items = [
+                      {
+                        k: "attendance",
+                        label: "Attendance",
+                        v: attendancePoints,
+                        tooltip:
+                          "Present , Late , Medical , Substitute , Absent ",
+                      },
+                      {
+                        k: "visitors",
+                        label: "Visitors",
+                        v: visitorsPoints,
+                        tooltip: "Visitors",
+                      },
+                      {
+                        k: "refGiven",
+                        label: "Referrals",
+                        v: referralsGivenPoints,
+                        tooltip: "RGI + RGO ",
+                      },
+                      // {
+                      //   k: "refReceived",
+                      //   label: "Referrals Received",
+                      //   v: referralsReceivedPoints,
+                      //   tooltip: "RRI + RRO × 5",
+                      // },
+                      {
+                        k: "oneToOne",
+                        label: "1-2-1",
+                        v: oneToOnePoints,
+                        tooltip: "One to One Meetings",
+                      },
+                      {
+                        k: "Conversion",
+                        label: "Conversion",
+                        v: t.CON,
+                        tooltip: "Conversion",
+                      },
+                      {
+                        k: "tyfcb",
+                        label: "TYFCB",
+                        v: tyfcbPoints,
+                        tooltip: "Thank You For Closed Business",
+                      },
+                      {
+                        k: "training",
+                        label: "Training",
+                        v: trainingPoints,
+                        tooltip: "Training ",
+                      },
+                      {
+                        k: "testimonials",
+                        label: "Testimonials",
+                        v: testimonialsPoints,
+                        tooltip: "Testimonials ",
+                      },
+                    ];
+
+                    return items.map((item) => (
+                      <div
+                        key={item.k}
+                        className="rounded-md border border-gray-200 bg-white p-3"
+                      >
+                        <div className="relative group text-xs text-gray-500">
+                          {item.label}
+                          <div className="absolute hidden group-hover:block -top-2 left-1/2 -translate-x-1/2 -translate-y-full rounded bg-black px-2 py-1 text-xs text-white whitespace-nowrap">
+                            {item.tooltip}
+                          </div>
+                        </div>
+
+                        <div className="mt-1 text-sm font-semibold text-green-700">
+                          {item.v.toLocaleString()}
+                        </div>
                       </div>
                     ));
                   })()}
@@ -137,29 +199,41 @@ export default function PowerTeamsPage() {
                   {/* Team points by category */}
                 </div>
                 <CircleChart
-                className="!flex-row !gap-[60px] "
+                  className="!flex-row !gap-[60px]"
                   data={(() => {
-                    const presentPoints = (t.P + t.L + t.M + t.S) * 2;
-                    const absentPoints = Math.abs(t.A * -2);
+                    // ===== POINT CALCULATIONS (same everywhere) =====
+                    const attendancePointsRaw =
+                      (t.P + t.L + t.M + t.S) * 2 + t.A * -2;
+
+                    const referralsGivenPoints = (t.RGI + t.RGO) * 5;
+                    const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
+
+                    const visitorsPoints = t.V * 10;
+                    const oneToOnePoints = t.oneToOne * 5;
+
                     const tyfcbPoints =
                       Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+
+                    const trainingPoints = t.CEU * 5;
+                    const testimonialsPoints = t.T * 5;
+
                     return [
-                      { label: "Present", value: presentPoints },
-                      { label: "Absent", value: absentPoints },
-                      { label: "RGI", value: t.RGI * 5 },
-                      { label: "RGO", value: t.RGO * 5 },
-                      { label: "RRI", value: t.RRI * 5 },
-                      { label: "RRO", value: t.RRO * 5 },
-                      { label: "Visitor", value: t.V * 10 },
-                      { label: "121", value: t.oneToOne * 5 },
-                      { label: "Testimonial", value: t.CEU * 5 },
-                      { label: "Training", value: t.T * 5 },
+                      { label: "Attendance", value: attendancePointsRaw },
+                      { label: "Visitors", value: visitorsPoints },
+                      { label: "Referrals ", value: referralsGivenPoints },
+                      {
+                        label: "Conversion",
+                        value: t.CON,
+                      },
+                      { label: "1-2-1", value: oneToOnePoints },
                       { label: "TYFCB", value: tyfcbPoints },
+                      { label: "Training", value: trainingPoints },
+                      { label: "Testimonials", value: testimonialsPoints },
                     ];
                   })()}
                 />
               </div>
-             
+
               <div>
                 <div className="text-xs font-medium text-gray-600 mb-2">
                   Members breakdown
@@ -187,7 +261,11 @@ export default function PowerTeamsPage() {
                       tyfcbPoints;
 
                     return {
-                      name: u.fullName.split(" ")[0] + " " + u.fullName.split(" ")[1].charAt(0) + ".",
+                      name:
+                        u.fullName.split(" ")[0] +
+                        " " +
+                        u.fullName.split(" ")[1].charAt(0) +
+                        ".",
 
                       // stacked values (POINTS)
                       P: presentPoints,
@@ -202,12 +280,12 @@ export default function PowerTeamsPage() {
                       RRO: u.RRO * 5,
 
                       V: visitorPoints,
-                      oneToOne: oneToOnePoints,
+                      121: oneToOnePoints,
                       CEU: testimonialPoints,
                       T: trainingPoints,
 
                       // amount converted to points
-                      TYFCB_amount: tyfcbPoints,
+                      TYFCB: tyfcbPoints,
 
                       totalPoints: computedTotal,
                     };

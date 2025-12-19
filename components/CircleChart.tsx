@@ -46,7 +46,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   121: "#F43F5E",
   CEU: "#FF7F50",
   Testimonial: "#0EA5E9",
-  TYFCB: "#D946EF"
+  TYFCB: "#D946EF",
+  Conversion: "#0EA5E9",
 };
 
 function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
@@ -68,7 +69,11 @@ export function CircleChart({ data, size = 180, strokeWidth = 24, className = ""
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [mouse, setMouse] = useState<{x:number;y:number}>({x:0,y:0});
 
-  const cleaned = useMemo(() => (data || []).filter((d) => (d?.value ?? 0) > 0), [data]);
+ const cleaned = useMemo(
+  () => (data || []).filter((d) => d && typeof d.value === "number"),
+  [data]
+);
+
   const total = useMemo(() => cleaned.reduce((sum, d) => sum + (d.value || 0), 0), [cleaned]);
   const cx = size / 2;
   const cy = size / 2;

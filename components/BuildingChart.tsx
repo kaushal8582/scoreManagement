@@ -21,10 +21,10 @@ const ACTIVITY_SERIES = [
   { key: "RRI", color: "#3b82f6" },
   { key: "RRO", color: "#0ea5e9" },
   { key: "V", color: "#e11d48" },
-  { key: "oneToOne", color: "#14b8a6" },
+  { key: "121", color: "#14b8a6" },
   { key: "CEU", color: "#f97316" },
   { key: "T", color: "#9333ea" },
-  { key: "TYFCB_amount", color: "#098c00ff" },
+  { key: "TYFCB", color: "#098c00ff" },
   // { key: "totalPoints", color: "#8c0015ff" },
 ];
 
@@ -71,7 +71,7 @@ export function BuildingChart({ data }: any) {
             }}
           />
 
-          <Legend />
+          {/* <Legend /> */}
 
           {/* Stacked multi-color bars */}
           {ACTIVITY_SERIES.map((s) => (

@@ -139,7 +139,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
         {children}
       </main>
-      <footer className="border-t border-gray-200 bg-white">
+      <footer className="border-t border-gray-200 bg-white sticky bottom-0">
         <div className="mx-auto max-w-6xl px-4 py-3 text-[15px] text-center text-gray-700">
           Developed by{" "}
           <a

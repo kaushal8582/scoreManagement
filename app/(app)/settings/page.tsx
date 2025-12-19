@@ -156,9 +156,12 @@ export default function SettingsPage() {
     const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
     const email = (u.email ?? '').toLowerCase();
     const category = (u.category ?? '').toLowerCase();
+    console.log("u",u.teamId,u)
     const teamName = (typeof u.teamId === 'object' && u.teamId?.name ? u.teamId.name.toLowerCase() : '');
     return fullName.includes(q) || email.includes(q) || category.includes(q) || teamName.includes(q);
   });
+
+  console.log("filteredUsers",filteredUsers)
 
   const filteredUserOptions = userOptions.filter((o) => o.label.toLowerCase().includes(memberSearch.trim().toLowerCase()));
 

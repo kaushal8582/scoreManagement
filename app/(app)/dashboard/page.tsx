@@ -17,11 +17,11 @@ import {
 } from "../../../lib/api";
 import { BuildingChart } from "../../../components/BuildingChart";
 import { CircleChart } from "../../../components/CircleChart";
+import SummaryBoxes from "../../../components/SummayBox";
 // import { CircleChart } from "../../../components/CircleChart";
 
 export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>("weekly");
-  
 
   const [performanceData, setPerformanceData] = useState<
     {
@@ -142,9 +142,6 @@ export default function DashboardPage() {
     }
   };
 
-
-  
-
   // Weekly reports deletion is handled inside the shared component
 
   return (
@@ -200,7 +197,7 @@ export default function DashboardPage() {
               {loading ? "Loading…" : error ? "Error" : "Live data"}
             </span>
           </div>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+          {/* <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
             {[
               { k: "P", label: "Present", tooltip: "Present" },
               { k: "A", label: "Absent", tooltip: "Absent" },
@@ -235,7 +232,8 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
+          <SummaryBoxes values={categoryTotals} />
         </section>
       )}
 
@@ -243,7 +241,7 @@ export default function DashboardPage() {
         <div className="mb-4 flex items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
-             Power Team performance
+              Power Team performance
             </h2>
             <p className="text-xs text-gray-500 sm:text-sm">
               Total points per team by{" "}
@@ -359,32 +357,45 @@ export default function DashboardPage() {
                   <div className="text-sm flex flex-col font-semibold text-gray-900">
                     {t.teamName}
                     <span className="text-xs text-gray-500">
-                     Captain : {t.captainFullName}
+                      Captain : {t.captainFullName}
                     </span>
                   </div>
                   <div className="text-xs text-gray-500">
-                  Total Points:   {t.totalPoints.toLocaleString()}
+                    Total Points: {t.totalPoints.toLocaleString()}
                   </div>
                 </div>
                 <CircleChart
                   className="flex-col"
                   data={(() => {
-                    const presentPoints = (t.P + t.L + t.M + t.S) * 2;
-                    const absentPoints = Math.abs(t.A * -2);
+                    // ===== POINT CALCULATIONS (same as boxes) =====
+                    const attendancePointsRaw =
+                      (t.P + t.L + t.M + t.S) * 2 + t.A * -2;
+
+                    const referralsGivenPoints = (t.RGI + t.RGO) * 5;
+                    const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
+
+                    const visitorsPoints = t.V * 10;
+                    const oneToOnePoints = t.oneToOne * 5;
+
                     const tyfcbPoints =
                       Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+
+                    const trainingPoints = t.CEU * 5;
+                    const testimonialsPoints = t.T * 5;
+
                     return [
-                      { label: "Present", value: presentPoints },
-                      { label: "Absent", value: absentPoints },
-                      { label: "RGI", value: t.RGI * 5 },
-                      { label: "RGO", value: t.RGO * 5 },
-                      { label: "RRI", value: t.RRI * 5 },
-                      { label: "RRO", value: t.RRO * 5 },
-                      { label: "Visitor", value: t.V * 10 },
-                      { label: "121", value: t.oneToOne * 5 },
-                      { label: "Testimonial", value: t.CEU * 5 },
-                      { label: "Training", value: t.T * 5 },
+                      { label: "Attendance", value: attendancePointsRaw },
+                      { label: "Visitors", value: visitorsPoints },
+                      { label: "Referrals", value: referralsGivenPoints },
+                      // {
+                      //   label: "Referrals Received",
+                      //   value: referralsReceivedPoints,
+                      // },
+                      { label: "Conversion", value: t.CON },
+                      { label: "1-2-1", value: oneToOnePoints },
                       { label: "TYFCB", value: tyfcbPoints },
+                      { label: "Training", value: trainingPoints },
+                      { label: "Testimonials", value: testimonialsPoints },
                     ];
                   })()}
                 />
@@ -435,10 +446,10 @@ export default function DashboardPage() {
               RRI: item.RRI * 5,
               RRO: item.RRO * 5,
               V: visitorPoints,
-              oneToOne: oneToOnePoints,
+              121: oneToOnePoints,
               CEU: testimonialPoints,
               T: trainingPoints,
-              TYFCB_amount: tyfcbPoints,
+              TYFCB: tyfcbPoints,
               totalPoints: computedTotal,
             };
           })}
