@@ -83,7 +83,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               // xmlns:xlink="http://www.w3.org/1999/xlink"
-              className="css-1snjh1o"
+              className="css-1snjh1o cursor-pointer"
             >
               <path d="M0 0H275V38H0V0Z" fill="url(#pattern0_2013_80)"></path>
               <defs>

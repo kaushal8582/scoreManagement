@@ -237,23 +237,32 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <section className="card p-4 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
-              Power Team performance
-            </h2>
-            <p className="text-xs text-gray-500 sm:text-sm">
-              Total points per team by{" "}
-              {timeframe === "weekly" ? "week" : "month"}.
-            </p>
+      {loading ? (
+        <div>
+          <div className="flex items-center min-h-[80vh] justify-center gap-2">
+            <div className="animate-spin rounded-full border-4 border-solid border-gray-300 border-t-transparent h-8 w-8"></div>
+            <div className="text-sm font-medium text-gray-700">Loading...</div>
           </div>
-          <span className="badge bg-green-100 text-green-700">
-            {loading ? "Loading…" : error ? "Error" : "Live data"}
-          </span>
         </div>
-        <TeamPerformanceChart data={performanceData} />
-      </section>
+      ) : (
+        <section className="card p-4 sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
+                Power Team performance
+              </h2>
+              <p className="text-xs text-gray-500 sm:text-sm">
+                Total points per team by{" "}
+                {timeframe === "weekly" ? "week" : "month"}.
+              </p>
+            </div>
+            <span className="badge bg-green-100 text-green-700">
+              {loading ? "Loading…" : error ? "Error" : "Live data"}
+            </span>
+          </div>
+          <TeamPerformanceChart data={performanceData} />
+        </section>
+      )}
 
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -331,7 +340,8 @@ export default function DashboardPage() {
       )}
 
       {/* Top teams – show three category circle charts like See more page */}
-      <section className="card p-4 sm:p-5">
+      {loading ? null : (
+        <section className="card p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
             Top 3 teams
@@ -360,7 +370,7 @@ export default function DashboardPage() {
                       Captain : {t.captainFullName}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm font-semibold text-green-700">
                     Total Points: {t.totalPoints.toLocaleString()}
                   </div>
                 </div>
@@ -369,16 +379,17 @@ export default function DashboardPage() {
                   data={(() => {
                     // ===== POINT CALCULATIONS (same as boxes) =====
                     const attendancePointsRaw =
-                      (t.P  + t.M + t.S) * 2 + t.A * -2;
+                      (t.P + t.M + t.S) * 2 + t.A * -2;
 
-                    const referralsGivenPoints = (t.RGI + t.RGO);
+                    const referralsGivenPoints = t.RGI + t.RGO;
                     const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
 
                     const visitorsPoints = t.V * 10;
                     const oneToOnePoints = t.oneToOne * 5;
 
-                    const tyfcbPoints =
-                      Number(((t.TYFCB_amount || 0) / 1000).toFixed(2));
+                    const tyfcbPoints = Number(
+                      ((t.TYFCB_amount || 0) / 1000).toFixed(2)
+                    );
 
                     const trainingPoints = t.TR * 5;
                     const testimonialsPoints = t.T * 5;
@@ -403,9 +414,11 @@ export default function DashboardPage() {
             ))}
         </div>
       </section>
+      )}
 
       {/* Top performers – full width stacked bar */}
-      <section className="card p-4 sm:p-5">
+      {loading ? null : (
+        <section className="card p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
             Top 7 performers
@@ -416,13 +429,12 @@ export default function DashboardPage() {
           data={userBreakdown.map((item) => {
             // ===== ATTENDANCE (Medical = -2) =====
             const attendancePoints =
-              (item.P  + item.S) * 2 + // present-like
+              (item.P + item.S) * 2 + // present-like
               item.M * -2 + // medical = -2
               item.A * -2; // absent = -2
 
             // ===== OTHER POINTS =====
-            const referralsPoints =
-              (item.RGI + item.RGO ) ;
+            const referralsPoints = item.RGI + item.RGO;
 
             const visitorPoints = item.V * 10;
             const oneToOnePoints = item.oneToOne * 5;
@@ -430,8 +442,9 @@ export default function DashboardPage() {
             const trainingPoints = item.TR * 5;
             const testimonialPoints = item.T * 5;
 
-            const tyfcbPoints = Number(((item.TYFCB_amount || 0) / 1000).toFixed(2));
-
+            const tyfcbPoints = Number(
+              ((item.TYFCB_amount || 0) / 1000).toFixed(2)
+            );
 
             // ===== TOTAL =====
             const totalPoints =
@@ -454,12 +467,15 @@ export default function DashboardPage() {
               TYFCB: tyfcbPoints,
               Training: trainingPoints,
               Testimonials: testimonialPoints,
-              Conversion: item.CON *25,
+              Conversion: item.CON * 25,
               totalPoints: totalPoints,
             };
           })}
         />
       </section>
+      )}
+
+
 
       {/* Weekly reports moved to Settings > Weekly tab as requested */}
     </div>

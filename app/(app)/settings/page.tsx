@@ -70,7 +70,7 @@ export default function SettingsPage() {
   >(null);
   const [deleteTeamLoading, setDeleteTeamLoading] = useState(false);
   const [savingCaptainLoading, setSavingCaptainLoading] = useState(false);
-  const pageSize = 25;
+  const pageSize = 100;
 
   useEffect(() => {
     let mounted = true;

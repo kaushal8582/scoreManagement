@@ -69,7 +69,16 @@ export default function PowerTeamsPage() {
           {error}
         </div>
       ) : null}
+       {loading ? (
+        <div>
+          <div className="flex items-center min-h-[80vh] justify-center gap-2">
+            <div className="animate-spin rounded-full border-4 border-solid border-gray-300 border-t-transparent h-8 w-8"></div>
+            <div className="text-sm font-medium text-gray-700">Loading...</div>
+          </div>
+        </div>
+      ) : null}
 
+{loading ? null : (
       <div className="grid gap-4 sm:grid-cols-1">
         {teams.map((t: any) => (
           <div
@@ -292,6 +301,7 @@ export default function PowerTeamsPage() {
           </div>
         ))}
       </div>
+)}
 
       {!loading && teams.length === 0 ? (
         <div className="text-sm text-gray-500">No teams yet.</div>
