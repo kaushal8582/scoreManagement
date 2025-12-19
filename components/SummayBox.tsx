@@ -1,67 +1,81 @@
+"use client";
+
 type SummaryValues = Record<string, number>;
 
 type SummaryBoxesProps = {
   values: SummaryValues;
 };
 
-const sum = (values: SummaryValues, keys: string[]) =>
-  keys.reduce((total, key) => total + (values[key] || 0), 0);
+/* ================= POINT CALCULATIONS ================= */
+
+// Attendance
+// P, L, S = +2
+// M (Medical) = -2
+// A (Absent) = -2
+const attendancePoints = (v: SummaryValues) =>
+  (v.P + v.L + v.S) * 2 +
+  (v.M || 0) * -2 +
+  (v.A || 0) * -2;
+
+// Referrals (Given + Received)
+const referralPoints = (v: SummaryValues) =>
+  (v.RGI + v.RGO + v.RRI + v.RRO) * 5;
+
+// TYFCB → ₹1000 = 1 point
+const tyfcbPoints = (v: SummaryValues) =>
+  Math.floor((v.TYFCB_amount || 0) / 1000);
+
+/* ================= COMPONENT ================= */
 
 export default function SummaryBoxes({ values }: SummaryBoxesProps) {
   const boxes = [
     {
       key: "attendance",
       label: "Attendance",
-      tooltip: "Present + Absent + Late + Medical + Substitute",
-      value: sum(values, ["P", "A", "L", "M", "S"]),
+      tooltip: "Present , Late,Medical,Absent,Substitute",
+      value: attendancePoints(values),
     },
     {
       key: "visitors",
       label: "Visitors",
-      tooltip: "Total Visitors",
-      value: sum(values, ["V"]),
+      tooltip: "Visitors × 10",
+      value: (values.V || 0) * 10,
     },
     {
-      key: "refGiven",
-      label: "Referrals ",
-      tooltip: "RGI + RGO",
-      value: sum(values, ["RGI", "RGO"]),
+      key: "referrals",
+      label: "Referrals",
+      tooltip: "RGI + RGO + RRI + RRO × 5",
+      value: referralPoints(values),
     },
-    // {
-    //   key: "refReceived",
-    //   label: "Referrals Received",
-    //   tooltip: "RRI + RRO",
-    //   value: sum(values, ["RRI", "RRO"]),
-    // },
     {
-      key: "Conversion",
+      key: "conversion",
       label: "Conversion",
-      tooltip: "Conversion",
-      value: sum(values, ["CON"]),
+      tooltip: "Total Conversions",
+      value: values.CON || 0,
     },
     {
       key: "tyfcb",
       label: "TYFCB",
-      tooltip: "Thank You For Closed Business",
-      value: sum(values, ["TYFCB_amount"]),
+      tooltip: "₹1000 = 1 Point",
+      value: tyfcbPoints(values),
     },
     {
       key: "testimonials",
       label: "Testimonials",
-      tooltip: "Testimonials",
-      value: sum(values, ["T"]),
+      tooltip: "Testimonials × 5",
+      value: (values.T || 0) * 5,
     },
     {
       key: "training",
       label: "Training",
-      tooltip: "Training",
-      value: sum(values, ["CEU"]),
+      tooltip: "CEU × 5",
+      value: (values.CEU || 0) * 5,
     },
     {
       key: "oneToOne",
       label: "1-2-1",
-      tooltip: "One to One Meetings Held",
-      value: sum(values, ["oneToOne"]),
+      tooltip: "1-2-1 Meetings × 5",
+      value: (values.oneToOne || 0) * 5,
     },
   ];
 
