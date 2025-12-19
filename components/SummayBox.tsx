@@ -54,7 +54,7 @@ export default function SummaryBoxes({ values }: SummaryBoxesProps) {
     {
       key: "training",
       label: "Training",
-      tooltip: "Chapter Education Units",
+      tooltip: "Training",
       value: sum(values, ["CEU"]),
     },
     {

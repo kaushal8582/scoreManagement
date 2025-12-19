@@ -1,14 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchUsers, uploadUsersCsv, createTeam, fetchTeams, fetchUserTotals, deleteTeam, updateTeam, downloadUsersSampleXls} from "../../../lib/api";
+import {
+  fetchUsers,
+  uploadUsersCsv,
+  createTeam,
+  fetchTeams,
+  fetchUserTotals,
+  deleteTeam,
+  updateTeam,
+  downloadUsersSampleXls,
+} from "../../../lib/api";
 import WeeklyReports from "../../../components/WeeklyReports";
 
 type TabKey = "upload" | "teams" | "weekly";
 
-interface UserOption { value: string; label: string; }
-interface UserRow { _id: string; firstName: string; lastName: string; email?: string; category?: string; teamId?: { name?: string } | null }
-interface TeamRow { _id: string; name: string; users: { _id: string; firstName: string; lastName: string; fullName: string; category?: string }[]; captainUserId?: { _id: string; fullName: string } | null }
+interface UserOption {
+  value: string;
+  label: string;
+  category : string;
+}
+interface UserRow {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  category?: string;
+  teamId?: { name?: string } | null;
+}
+interface TeamRow {
+  _id: string;
+  name: string;
+  users: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    category?: string;
+  }[];
+  captainUserId?: { _id: string; fullName: string } | null;
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("upload");
@@ -24,13 +55,24 @@ export default function SettingsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [userSearch, setUserSearch] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
-  const [totalsByUserId, setTotalsByUserId] = useState<Record<string, number>>({});
-  const [captainModalTeamId, setCaptainModalTeamId] = useState<string | null>(null);
-  const [selectedCaptainUserId, setSelectedCaptainUserId] = useState<string | null>(null);
+  const [totalsByUserId, setTotalsByUserId] = useState<Record<string, number>>(
+    {}
+  );
+  const [captainModalTeamId, setCaptainModalTeamId] = useState<string | null>(
+    null
+  );
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteModalTeamId, setDeleteModalTeamId] = useState<string | null>(
+    null
+  );
+  const [selectedCaptainUserId, setSelectedCaptainUserId] = useState<
+    string | null
+  >(null);
+  const [deleteTeamLoading, setDeleteTeamLoading] = useState(false);
+  const [savingCaptainLoading, setSavingCaptainLoading] = useState(false);
   const pageSize = 25;
 
   useEffect(() => {
-    
     let mounted = true;
     async function loadUsers() {
       setLoading(true);
@@ -42,11 +84,19 @@ export default function SettingsPage() {
         if (!mounted) return;
         setUsers(usersData as any);
         setTeams(teamsData as any);
+
+        // conos
         setUserOptions(
-          usersData.map((u) => ({ value: u._id, label: `${u.firstName} ${u.lastName}` }))
+          usersData.map((u) => ({
+            value: u._id,
+            label: `${u.firstName} ${u.lastName}`,
+            category: u.category || "",
+          }))
         );
         const totalsMap: Record<string, number> = {};
-        totals.forEach(t => { totalsMap[t.userId] = t.totalPoints; });
+        totals.forEach((t) => {
+          totalsMap[t.userId] = t.totalPoints;
+        });
         setTotalsByUserId(totalsMap);
       } catch (err: any) {
         if (!mounted) return;
@@ -61,7 +111,9 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const handleUserCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUserCsvUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
@@ -73,9 +125,17 @@ export default function SettingsPage() {
       const totals = await fetchUserTotals();
       setUsers(usersData as any);
       setCurrentPage(1);
-      setUserOptions(usersData.map((u) => ({ value: u._id, label: `${u.firstName} ${u.lastName}` })));
+      setUserOptions(
+        usersData.map((u) => ({
+          value: u._id,
+          label: `${u.firstName} ${u.lastName}`,
+          category: u.category || "",
+        }))
+      );
       const totalsMap: Record<string, number> = {};
-      totals.forEach(t => { totalsMap[t.userId] = t.totalPoints; });
+      totals.forEach((t) => {
+        totalsMap[t.userId] = t.totalPoints;
+      });
       setTotalsByUserId(totalsMap);
     } catch (err: any) {
       setError(err.message || "Upload failed");
@@ -94,7 +154,7 @@ export default function SettingsPage() {
       const usersData = await fetchUsers();
       const totals = await fetchUserTotals();
       setUsers(usersData as any);
-      
+
       setTeams(teamsData as any);
       setTeamName("");
       setSelectedUserIds([]);
@@ -113,15 +173,22 @@ export default function SettingsPage() {
 
   const handleDeleteTeam = async (id: string) => {
     try {
+      setDeleteTeamLoading(true);
       await deleteTeam(id);
       const teamsData = await fetchTeams();
       const usersData = await fetchUsers();
       const totals = await fetchUserTotals();
       const totalsMap: Record<string, number> = {};
-      totals.forEach(t => { totalsMap[t.userId] = t.totalPoints; });
+      totals.forEach((t) => {
+        totalsMap[t.userId] = t.totalPoints;
+      });
       setUsers(usersData as any);
       setTeams(teamsData as any);
+      setDeleteModalOpen(false);
+      setDeleteModalTeamId(null);
+      setDeleteTeamLoading(false);
     } catch (err: any) {
+      setDeleteTeamLoading(false);
       setError(err.message || "Failed to delete team");
     }
   };
@@ -133,16 +200,23 @@ export default function SettingsPage() {
 
   const saveCaptain = async () => {
     if (!captainModalTeamId) return;
+    setSavingCaptainLoading(true);
     try {
-      await updateTeam(captainModalTeamId, { captainUserId: selectedCaptainUserId ?? null });
+      await updateTeam(captainModalTeamId, {
+        captainUserId: selectedCaptainUserId ?? null,
+      });
       const teamsData = await fetchTeams();
       const usersData = await fetchUsers();
       const totals = await fetchUserTotals();
       const totalsMap: Record<string, number> = {};
-      totals.forEach(t => { totalsMap[t.userId] = t.totalPoints; });
+      totals.forEach((t) => {
+        totalsMap[t.userId] = t.totalPoints;
+      });
       setUsers(usersData as any);
       setTeams(teamsData as any);
+      setSavingCaptainLoading(false);
     } catch (err: any) {
+      setSavingCaptainLoading(false);
       setError(err.message || "Failed to set captain");
     } finally {
       setCaptainModalTeamId(null);
@@ -154,16 +228,26 @@ export default function SettingsPage() {
     const q = userSearch.trim().toLowerCase();
     if (!q) return true;
     const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
-    const email = (u.email ?? '').toLowerCase();
-    const category = (u.category ?? '').toLowerCase();
-    console.log("u",u.teamId,u)
-    const teamName = (typeof u.teamId === 'object' && u.teamId?.name ? u.teamId.name.toLowerCase() : '');
-    return fullName.includes(q) || email.includes(q) || category.includes(q) || teamName.includes(q);
+    const email = (u.email ?? "").toLowerCase();
+    const category = (u.category ?? "").toLowerCase();
+    console.log("u", u.teamId, u);
+    const teamName =
+      typeof u.teamId === "object" && u.teamId?.name
+        ? u.teamId.name.toLowerCase()
+        : "";
+    return (
+      fullName.includes(q) ||
+      email.includes(q) ||
+      category.includes(q) ||
+      teamName.includes(q)
+    );
   });
 
-  console.log("filteredUsers",filteredUsers)
+  console.log("filteredUsers", filteredUsers);
 
-  const filteredUserOptions = userOptions.filter((o) => o.label.toLowerCase().includes(memberSearch.trim().toLowerCase()));
+  const filteredUserOptions = userOptions.filter((o) =>
+    o.label.toLowerCase().includes(memberSearch.trim().toLowerCase())
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -172,7 +256,7 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-         Manage members, power teams, and weekly report for your dashboard.
+          Manage members, teams, and weekly report for your dashboard.
         </p>
       </section>
 
@@ -187,7 +271,7 @@ export default function SettingsPage() {
               }`}
               onClick={() => setActiveTab("upload")}
             >
-              User upload
+              Members
             </button>
             <button
               className={`px-3 py-2 font-medium ${
@@ -218,9 +302,14 @@ export default function SettingsPage() {
               <div>
                 {/* Previous title preserved; commenting to avoid removal */}
                 {/* <h2 className="text-sm font-semibold text-black sm:text-base">Upload users CSV</h2> */}
-                <h2 className="text-sm font-semibold text-black sm:text-base">Upload members Excel (.xls/.xlsx)</h2>
+                <h2 className="text-sm font-semibold text-black sm:text-base">
+                  Member List
+                </h2>
                 {/* <p className="text-xs text-slate-400 sm:text-sm">Import users with their basic details via CSV.</p> */}
-                <p className="text-xs text-slate-400 sm:text-sm">Import members with their basic details via Excel (.xls/.xlsx).</p>
+                <p className="text-xs text-slate-400 sm:text-sm">
+                  Import members with their basic details via Excel
+                  (.xls/.xlsx).
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -230,15 +319,17 @@ export default function SettingsPage() {
                       await downloadUsersSampleXls();
                     } catch (e) {
                       console.error(e);
-                      alert('Failed to download sample .xls file');
+                      alert("Failed to download sample .xls file");
                     }
                   }}
                   className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
                 >
-                  Download sample Excel (.xls)
+                  Download Sample
                 </button>
                 <label className=" cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50">
-                  <span>{uploadingUsers ? "Uploading…" : "Select Excel/CSV file (.xls/.xlsx/.csv)"}</span>
+                  <span>
+                    {uploadingUsers ? "Uploading…" : "Upload Excel  "}
+                  </span>
                   <input
                     type="file"
                     accept=".xls,.xlsx,.csv"
@@ -252,7 +343,6 @@ export default function SettingsPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-               
                 {/* <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -295,46 +385,73 @@ export default function SettingsPage() {
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">First name</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Last name</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        First name
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Last name
+                      </th>
                       {/* <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Email</th> */}
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Category</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Team</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Total score</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Category
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Team
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Total score
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
-                    {filteredUsers.slice((currentPage-1)*pageSize, currentPage*pageSize).map((user) => (
-                      <tr key={user._id} className="hover:bg-slate-50">
-                        <td className="px-3 py-2 text-sm">{user.firstName}</td>
-                        <td className="px-3 py-2 text-sm">{user.lastName}</td>
-                        {/* <td className="px-3 py-2 text-sm text-slate-700">{user.email ?? '-'}</td> */}
-                        <td className="px-3 py-2 text-sm text-slate-700">
-                          <span className="badge bg-slate-200 text-slate-800">{user.category ?? '-'}</span>
-                        </td>
-                        <td className="px-3 py-2 text-sm">{user.teamId && typeof user.teamId === 'object' ? user.teamId.name ?? '-' : '-'}</td>
-                        <td className="px-3 py-2 text-sm">{totalsByUserId[user._id] ?? 0}</td>
-                      </tr>
-                    ))}
+                    {filteredUsers
+                      .slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize
+                      )
+                      .map((user) => (
+                        <tr key={user._id} className="hover:bg-slate-50">
+                          <td className="px-3 py-2 text-sm">
+                            {user.firstName}
+                          </td>
+                          <td className="px-3 py-2 text-sm">{user.lastName}</td>
+                          {/* <td className="px-3 py-2 text-sm text-slate-700">{user.email ?? '-'}</td> */}
+                          <td className="px-3 py-2 text-sm text-slate-700">
+                            <span className="badge bg-slate-200 text-slate-800">
+                              {user.category ?? "-"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-sm">
+                            {user.teamId && typeof user.teamId === "object"
+                              ? user.teamId.name ?? "-"
+                              : "-"}
+                          </td>
+                          <td className="px-3 py-2 text-sm">
+                            {totalsByUserId[user._id] ?? 0}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
               <div className="flex items-center justify-between py-2 text-xs text-slate-600">
                 <div>
-                  Showing {(currentPage-1)*pageSize + 1}–{Math.min(currentPage*pageSize, filteredUsers.length)} of {filteredUsers.length}
+                  Showing {(currentPage - 1) * pageSize + 1}–
+                  {Math.min(currentPage * pageSize, filteredUsers.length)} of{" "}
+                  {filteredUsers.length}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     className="rounded-md border border-slate-300 bg-white px-2 py-1 disabled:opacity-60"
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p-1))}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   >
                     Prev
                   </button>
                   <button
                     className="rounded-md border border-slate-300 bg-white px-2 py-1 disabled:opacity-60"
-                    disabled={currentPage*pageSize >= filteredUsers.length}
-                    onClick={() => setCurrentPage((p) => p+1)}
+                    disabled={currentPage * pageSize >= filteredUsers.length}
+                    onClick={() => setCurrentPage((p) => p + 1)}
                   >
                     Next
                   </button>
@@ -348,10 +465,10 @@ export default function SettingsPage() {
           <div className="mt-4 space-y-6">
             <div className="space-y-2">
               <h2 className="text-sm font-semibold text-black sm:text-base">
-                Create team
+                Team Listing
               </h2>
               <p className="text-xs text-slate-400 sm:text-sm">
-               Group members into power teams to compare performance across the BNI.
+                Group members into teams to compare performance across the BNI.
               </p>
             </div>
 
@@ -362,7 +479,7 @@ export default function SettingsPage() {
                 </label>
                 <input
                   type="text"
-                 className="
+                  className="
     w-full
     bg-white
     px-3
@@ -380,17 +497,17 @@ export default function SettingsPage() {
                   placeholder="e.g. Alpha Squad"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                   style={{
-                // backgroundColor: "white",
-                // padding: "11px",
-                // borderRadius: "3px",
-                // color: "black",
-                // border: "0px",
-                boxShadow:
-                  "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
-                appearance: "none",
-                // borderBottom: "3px solid #DF2020",
-              }}
+                  style={{
+                    // backgroundColor: "white",
+                    // padding: "11px",
+                    // borderRadius: "3px",
+                    // color: "black",
+                    // border: "0px",
+                    boxShadow:
+                      "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
+                    appearance: "none",
+                    // borderBottom: "3px solid #DF2020",
+                  }}
                 />
               </div>
 
@@ -399,7 +516,9 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-slate-700">
                     Members
                   </label>
-                  <span className="text-xs text-slate-500">Selected members: {selectedUserIds.length}</span>
+                  <span className="text-xs text-slate-500">
+                    Selected members: {selectedUserIds.length}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -423,16 +542,16 @@ export default function SettingsPage() {
                     value={memberSearch}
                     onChange={(e) => setMemberSearch(e.target.value)}
                     style={{
-                // backgroundColor: "white",
-                // padding: "11px",
-                // borderRadius: "3px",
-                // color: "black",
-                // border: "0px",
-                boxShadow:
-                  "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
-                appearance: "none",
-                // borderBottom: "3px solid #DF2020",
-              }}
+                      // backgroundColor: "white",
+                      // padding: "11px",
+                      // borderRadius: "3px",
+                      // color: "black",
+                      // border: "0px",
+                      boxShadow:
+                        "rgba(0, 0, 0, 0.3) 0px 1px 3px inset, rgb(255, 255, 255) 0px 0px 0px, rgb(255, 255, 255) 0px 0px 0px",
+                      appearance: "none",
+                      // borderBottom: "3px solid #DF2020",
+                    }}
                   />
                 </div>
                 <div className="max-h-40 space-y-1 overflow-auto rounded-lg border border-slate-300 bg-white p-2 text-sm">
@@ -449,7 +568,12 @@ export default function SettingsPage() {
                             : "text-slate-700 hover:bg-slate-50"
                         }`}
                       >
-                        <span>{option.label}</span>
+                        <span>
+                          {option.label}{" "}
+                          <sub className="text-xs text-slate-500">
+                            ({option.category})
+                          </sub>
+                        </span>
                         {selected && (
                           <span className="badge bg-red-600 text-xs text-white">
                             Selected
@@ -469,22 +593,30 @@ export default function SettingsPage() {
                 disabled={creatingTeam}
                 onClick={handleTeamSave}
               >
-                {creatingTeam ? 'Saving…' : 'Save team'}
+                {creatingTeam ? "Saving…" : "Save team"}
               </button>
             </div>
 
             <div className="mt-6">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-black">Teams {teams.length}</h3>
+                <h3 className="text-sm font-semibold text-black">
+                  Teams {teams.length}
+                </h3>
                 {/* <span className="text-xs text-slate-500"> teams</span> */}
               </div>
               <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Team</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Members</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Actions</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Team
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Members
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
@@ -497,7 +629,16 @@ export default function SettingsPage() {
                           ) : (
                             <div className="flex flex-wrap gap-2">
                               {team.users.map((u) => (
-                                <span key={u._id} className="badge bg-slate-800 text-slate-200">{u.fullName}{team.captainUserId && team.captainUserId._id === u._id ? ' (c)' : ''}</span>
+                                <span
+                                  key={u._id}
+                                  className="badge bg-slate-800 text-slate-200"
+                                >
+                                  {u.fullName}
+                                  {team.captainUserId &&
+                                  team.captainUserId._id === u._id
+                                    ? " (c)"
+                                    : ""}
+                                </span>
                               ))}
                             </div>
                           )}
@@ -505,7 +646,10 @@ export default function SettingsPage() {
                         <td className="px-3 py-2 text-sm">
                           <button
                             className="rounded-md border border-red-300 bg-white px-2 py-1 text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteTeam(team._id)}
+                            onClick={() => {
+                              setDeleteModalOpen(true);
+                              setDeleteModalTeamId(team._id);
+                            }}
                           >
                             Delete
                           </button>
@@ -537,8 +681,13 @@ export default function SettingsPage() {
             <div className="mb-2 text-sm font-medium">Select team captain</div>
             <div className="max-h-48 overflow-auto rounded-md border border-gray-200">
               <ul className="divide-y divide-gray-200">
-                {(teams.find(t => t._id === captainModalTeamId)?.users ?? []).map((u) => (
-                  <li key={u._id} className="flex items-center justify-between px-3 py-2">
+                {(
+                  teams.find((t) => t._id === captainModalTeamId)?.users ?? []
+                ).map((u) => (
+                  <li
+                    key={u._id}
+                    className="flex items-center justify-between px-3 py-2"
+                  >
                     <span>{u.fullName}</span>
                     <input
                       type="radio"
@@ -551,22 +700,87 @@ export default function SettingsPage() {
               </ul>
             </div>
             <div className="mt-3 flex justify-end gap-2">
-              <button className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm" onClick={() => { setCaptainModalTeamId(null); setSelectedCaptainUserId(null); }}>Cancel</button>
-              <button className="rounded-md bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-60" disabled={!selectedCaptainUserId} onClick={saveCaptain}>Save</button>
+              <button
+                className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
+                onClick={() => {
+                  setCaptainModalTeamId(null);
+                  setSelectedCaptainUserId(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-md bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-60"
+                disabled={!selectedCaptainUserId || savingCaptainLoading}
+                onClick={saveCaptain}
+              >
+                {savingCaptainLoading ? "Saving..." : "Save"}
+              </button>
             </div>
           </div>
         </div>
       )}
-            {uploadingUsers && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                <div className="rounded-lg bg-white px-6 py-4 text-center shadow-xl">
-                  <div className="mb-2 text-sm font-medium text-gray-900">Uploading users…</div>
-                  <div className="text-xs text-gray-500">Please wait while we process your Excel/CSV.</div>
-                </div>
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+            {/* Header */}
+            {/* <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+                ⚠️
               </div>
-            )}
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">
+                  Delete Team
+                </h3>
+                <p className="text-sm text-gray-500">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div> */}
+
+            {/* Body */}
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-700">
+                Are you sure you want to delete this team? 
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setDeleteModalTeamId(null);
+                }}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+
+              <button
+                disabled={!deleteModalTeamId || deleteTeamLoading}
+                onClick={() => handleDeleteTeam(deleteModalTeamId as string)}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 transition"
+              >
+                {deleteTeamLoading ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {uploadingUsers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="rounded-lg bg-white px-6 py-4 text-center shadow-xl">
+            <div className="mb-2 text-sm font-medium text-gray-900">
+              Uploading users…
+            </div>
+            <div className="text-xs text-gray-500">
+              Please wait while we process your Excel/CSV.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-

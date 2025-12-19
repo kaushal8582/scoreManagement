@@ -156,8 +156,8 @@ export default function DashboardPage() {
           </p> */}
         </div>
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-          <div className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white p-1 text-xs font-medium text-gray-700 sm:text-sm">
-            <button
+          {/* <div className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white p-1 text-xs font-medium text-gray-700 sm:text-sm"> */}
+            {/* <button
               className={`flex-1 rounded-full px-3 py-1 transition ${
                 timeframe === "weekly"
                   ? "bg-brand-600 text-white"
@@ -166,7 +166,7 @@ export default function DashboardPage() {
               onClick={() => setTimeframe("weekly")}
             >
               Weekly
-            </button>
+            </button> */}
             {/* <button
               className={`flex-1 rounded-full px-3 py-1 transition ${
                 timeframe === "monthly"
@@ -177,7 +177,7 @@ export default function DashboardPage() {
             >
               Monthly
             </button> */}
-          </div>
+          {/* </div> */}
           <button
             className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
             onClick={() => setUploadModalOpen(true)}

@@ -194,9 +194,9 @@ export default function PowerTeamsPage() {
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <div className="text-xs font-medium text-gray-600 mb-2 mt-6">
-                  {/* Team points by category */}
+                 Team Stats by category
                 </div>
                 <CircleChart
                   className="!flex-row !gap-[60px]"
@@ -232,7 +232,7 @@ export default function PowerTeamsPage() {
                     ];
                   })()}
                 />
-              </div>
+              </div> */}
 
               <div>
                 <div className="text-xs font-medium text-gray-600 mb-2">
