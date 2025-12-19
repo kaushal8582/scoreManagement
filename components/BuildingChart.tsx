@@ -7,7 +7,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
 } from "recharts";
 
 const ACTIVITY_SERIES = [
@@ -25,32 +24,65 @@ const ACTIVITY_SERIES = [
   { key: "CEU", color: "#f97316" },
   { key: "Conversion", color: "#9333ea" },
   { key: "TYFCB", color: "#098c00ff" },
-
-  // { key: "totalPoints", color: "#8c0015ff" },
 ];
 
-export function BuildingChart({ data }: any) {
-  console.log("data", data);
+/* =======================
+   Custom X Axis Tick
+   ======================= */
+const CustomXAxisTick = ({ x, y, payload, data }: any) => {
+  const item = data[payload.index]; // FULL ROW
+  const total = item.Attendance + item.Conversion +item?.Referrals + item?.TYFCB + item?.Testimonials + item?.Training + item?.Visitors +item?.["121"]
 
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={14}
+        textAnchor="middle"
+        fill="#000000ff"
+        fontSize={14}
+
+        
+      >
+        {item?.name}
+      </text>
+
+      <text
+        x={0}
+        y={0}
+        dy={30}
+        textAnchor="middle"
+        fill="#252626ff"
+        fontSize={13}
+        fontWeight={600}
+      >
+        Total: {total.toFixed(0)}
+      </text>
+    </g>
+  );
+};
+
+
+export function BuildingChart({ data }: any) {
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
-          margin={{ top: 20, right: 50, left: 20, bottom: 20 }}
+          margin={{ top: 20, right: 50, left: 20, bottom: 55 }}
         >
-          <XAxis dataKey="name" interval={0} tick={{ fill: "#9ca3af", fontSize: 12 }} />
+          {/* X Axis with custom tick */}
+          <XAxis
+            dataKey="name "
+            interval={0}
+             tick={(props) => <CustomXAxisTick {...props} data={data} />}
+          />
 
           {/* Left axis → stacked activities */}
           <YAxis yAxisId="left" tick={{ fill: "#9ca3af" }} />
 
-          {/* Right axis → amount */}
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            tick={{ fill: "#9ca3af" }}
-          />
-
+          {/* Tooltip */}
           <Tooltip
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null;
@@ -72,9 +104,7 @@ export function BuildingChart({ data }: any) {
             }}
           />
 
-          {/* <Legend /> */}
-
-          {/* Stacked multi-color bars */}
+          {/* Stacked activity bars */}
           {ACTIVITY_SERIES.map((s) => (
             <Bar
               key={s.key}
@@ -84,8 +114,6 @@ export function BuildingChart({ data }: any) {
               fill={s.color}
             />
           ))}
-
-          {/* Removed amount bar to show only a single stacked tower per user */}
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -394,6 +394,15 @@ export default function SettingsPage() {
                   </span>
                 </div> */}
               </div>
+
+                  {loading &&  <div>
+          <div className="flex items-center min-h-[80vh] justify-center gap-2">
+            <div className="animate-spin rounded-full border-4 border-solid border-gray-300 border-t-transparent h-8 w-8"></div>
+            <div className="text-sm font-medium text-gray-700">Loading...</div>
+          </div>
+        </div>}
+
+                    {loading ?null :(
               <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
                   <thead className="bg-slate-50">
@@ -447,6 +456,9 @@ export default function SettingsPage() {
                   </tbody>
                 </table>
               </div>
+
+              )}
+              
               <div className="flex items-center justify-between py-2 text-xs text-slate-600">
                 <div>
                   Showing {(currentPage - 1) * pageSize + 1}–
@@ -470,8 +482,10 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+              
             </div>
           </div>
+          
         )}
 
         {activeTab === "teams" && (

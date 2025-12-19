@@ -39,7 +39,7 @@ export default function SummaryBoxes({ values }: SummaryBoxesProps) {
     {
       key: "attendance",
       label: "Attendance",
-      tooltip: "Present , Late,Medical,Absent,Substitute",
+      tooltip: "Present, Medical, Absent, Substitute",
       value: attendancePoints(values),
     },
     {
