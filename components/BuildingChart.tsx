@@ -54,7 +54,7 @@ const CustomXAxisTick = ({ x, y, payload, data }: any) => {
         dy={30}
         textAnchor="middle"
         fill="#252626ff"
-        fontSize={13}
+        fontSize={11}
         fontWeight={600}
       >
         Total: {total.toFixed(0)}
