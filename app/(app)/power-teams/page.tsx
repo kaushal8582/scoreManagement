@@ -109,7 +109,8 @@ export default function PowerTeamsPage() {
                     const oneToOnePoints = t.oneToOne * 5;
 
                     const tyfcbPoints =
-                      Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+                      Number(((t.TYFCB_amount || 0) / 1000).toFixed(2));
+                    // const conversionPoints = t.CON * 25;
 
                     const trainingPoints = t.CEU * 5;
                     const testimonialsPoints = t.T * 5;
@@ -253,7 +254,8 @@ export default function PowerTeamsPage() {
                     const trainingPoints = u.T * 5;
                     const testimonialPoints = u.CEU * 5;
                     const tyfcbPoints =
-                      Math.floor((u.TYFCB_amount || 0) / 1000) * 1;
+                      Number(((u.TYFCB_amount || 0) / 1000).toFixed(2));
+                    // const conversionPoints = u.CON * 25;
 
                     // ===== TOTAL POINTS =====
                     const totalPoints =

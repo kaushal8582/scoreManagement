@@ -378,7 +378,7 @@ export default function DashboardPage() {
                     const oneToOnePoints = t.oneToOne * 5;
 
                     const tyfcbPoints =
-                      Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+                      Number(((t.TYFCB_amount || 0) / 1000).toFixed(2));
 
                     const trainingPoints = t.CEU * 5;
                     const testimonialsPoints = t.T * 5;
@@ -430,7 +430,8 @@ export default function DashboardPage() {
             const trainingPoints = item.CEU * 5;
             const testimonialPoints = item.T * 5;
 
-            const tyfcbPoints = Math.floor((item.TYFCB_amount || 0) / 1000) * 1;
+            const tyfcbPoints = Number(((item.TYFCB_amount || 0) / 1000).toFixed(2));
+
 
             // ===== TOTAL =====
             const totalPoints =

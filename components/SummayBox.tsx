@@ -23,11 +23,18 @@ const referralPoints = (v: SummaryValues) =>
 
 // TYFCB → ₹1000 = 1 point
 const tyfcbPoints = (v: SummaryValues) =>
-  Math.floor((v.TYFCB_amount || 0) / 1000);
+  Number(((v.TYFCB_amount || 0) / 1000).toFixed(2));
+
 
 /* ================= COMPONENT ================= */
 
+
+
 export default function SummaryBoxes({ values }: SummaryBoxesProps) {
+
+  // console.log("values", values);
+
+
   const boxes = [
     {
       key: "attendance",
