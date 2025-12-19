@@ -11,11 +11,11 @@ import {
 } from "recharts";
 
 const ACTIVITY_SERIES = [
-  { key: "P", color: "#22c55e" },
-  { key: "A", color: "#ef4444" },
-  { key: "L", color: "#f59e0b" },
-  { key: "M", color: "#06b6d4" },
-  { key: "S", color: "#7c3aed" },
+  { key: "Attendance", color: "#22c55e" },
+  { key: "Visitors", color: "#ef4444" },
+  { key: "Referrals", color: "#f59e0b" },
+  { key: "Training", color: "#06b6d4" },
+  { key: "Testimonials", color: "#7c3aed" },
   { key: "RGI", color: "#84cc16" },
   { key: "RGO", color: "#10b981" },
   { key: "RRI", color: "#3b82f6" },
@@ -23,8 +23,9 @@ const ACTIVITY_SERIES = [
   { key: "V", color: "#e11d48" },
   { key: "121", color: "#14b8a6" },
   { key: "CEU", color: "#f97316" },
-  { key: "T", color: "#9333ea" },
+  { key: "Conversion", color: "#9333ea" },
   { key: "TYFCB", color: "#098c00ff" },
+
   // { key: "totalPoints", color: "#8c0015ff" },
 ];
 

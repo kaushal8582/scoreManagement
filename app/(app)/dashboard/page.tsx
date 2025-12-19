@@ -157,7 +157,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
           {/* <div className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white p-1 text-xs font-medium text-gray-700 sm:text-sm"> */}
-            {/* <button
+          {/* <button
               className={`flex-1 rounded-full px-3 py-1 transition ${
                 timeframe === "weekly"
                   ? "bg-brand-600 text-white"
@@ -167,7 +167,7 @@ export default function DashboardPage() {
             >
               Weekly
             </button> */}
-            {/* <button
+          {/* <button
               className={`flex-1 rounded-full px-3 py-1 transition ${
                 timeframe === "monthly"
                   ? "bg-brand-600 text-white"
@@ -287,7 +287,7 @@ export default function DashboardPage() {
                 <span>
                   {selectedFiles.length > 0
                     ? `${selectedFiles.length} file(s) selected`
-                    : "Select Excel/CSV files"}
+                    : "Select Excel files"}
                 </span>
                 <input
                   type="file"
@@ -414,43 +414,47 @@ export default function DashboardPage() {
         </div>
         <BuildingChart
           data={userBreakdown.map((item) => {
-            const presentPoints = (item.P + item.L + item.M + item.S) * 2;
-            const absentPoints = item.A * -2;
-            const referralPoints =
+            // ===== ATTENDANCE (Medical = -2) =====
+            const attendancePoints =
+              (item.P + item.L + item.S) * 2 + // present-like
+              item.M * -2 + // medical = -2
+              item.A * -2; // absent = -2
+
+            // ===== OTHER POINTS =====
+            const referralsPoints =
               (item.RGI + item.RGO + item.RRI + item.RRO) * 5;
+
             const visitorPoints = item.V * 10;
-            const oneToOnePoints = item.oneToOne * 5; // 121
-            const testimonialPoints = item.CEU * 5;
-            const trainingPoints = item.T * 5;
+            const oneToOnePoints = item.oneToOne * 5;
+
+            const trainingPoints = item.CEU * 5;
+            const testimonialPoints = item.T * 5;
+
             const tyfcbPoints = Math.floor((item.TYFCB_amount || 0) / 1000) * 1;
 
-            const computedTotal =
-              presentPoints +
-              absentPoints +
-              referralPoints +
+            // ===== TOTAL =====
+            const totalPoints =
+              attendancePoints +
+              referralsPoints +
               visitorPoints +
               oneToOnePoints +
-              testimonialPoints +
               trainingPoints +
+              testimonialPoints +
               tyfcbPoints;
 
             return {
               name: item.fullName,
-              P: presentPoints,
-              A: absentPoints,
-              L: 0,
-              M: 0,
-              S: 0,
-              RGI: item.RGI * 5,
-              RGO: item.RGO * 5,
-              RRI: item.RRI * 5,
-              RRO: item.RRO * 5,
-              V: visitorPoints,
-              121: oneToOnePoints,
-              CEU: testimonialPoints,
-              T: trainingPoints,
+
+              // ✅ ONLY 8 FIELDS
+              Attendance: attendancePoints,
+              Visitors: visitorPoints,
+              Referrals: referralsPoints,
+              "121": oneToOnePoints,
               TYFCB: tyfcbPoints,
-              totalPoints: computedTotal,
+              Training: trainingPoints,
+              Testimonials: testimonialPoints,
+              Conversion: item.CON,
+              totalPoints: totalPoints,
             };
           })}
         />

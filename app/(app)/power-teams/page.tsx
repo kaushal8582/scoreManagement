@@ -240,54 +240,48 @@ export default function PowerTeamsPage() {
                 </div>
                 <BuildingChart
                   data={(userBreakdownByTeam[t.teamId] || []).map((u: any) => {
-                    const presentPoints = (u.P + u.L + u.M + u.S) * 2;
-                    const absentPoints = u.A * -2;
-                    const referralPoints = (u.RGI + u.RGO + u.RRI + u.RRO) * 5;
+                    // ===== ATTENDANCE (Medical = -2) =====
+                    const attendancePoints =
+                      (u.P + u.L + u.S) * 2 + // Present-like
+                      u.M * -2 + // Medical = -2
+                      u.A * -2; // Absent = -2
+
+                    // ===== OTHER POINTS =====
+                    const referralsPoints = (u.RGI + u.RGO + u.RRI + u.RRO) * 5;
                     const visitorPoints = u.V * 10;
                     const oneToOnePoints = u.oneToOne * 5;
-                    const testimonialPoints = u.CEU * 5;
                     const trainingPoints = u.T * 5;
+                    const testimonialPoints = u.CEU * 5;
                     const tyfcbPoints =
                       Math.floor((u.TYFCB_amount || 0) / 1000) * 1;
 
-                    const computedTotal =
-                      presentPoints +
-                      absentPoints +
-                      referralPoints +
+                    // ===== TOTAL POINTS =====
+                    const totalPoints =
+                      attendancePoints +
+                      referralsPoints +
                       visitorPoints +
                       oneToOnePoints +
-                      testimonialPoints +
                       trainingPoints +
+                      testimonialPoints +
                       tyfcbPoints;
 
                     return {
                       name:
                         u.fullName.split(" ")[0] +
                         " " +
-                        u.fullName.split(" ")[1].charAt(0) +
+                        (u.fullName.split(" ")[1]?.charAt(0) || "") +
                         ".",
 
-                      // stacked values (POINTS)
-                      P: presentPoints,
-                      A: absentPoints,
-                      L: 0,
-                      M: 0,
-                      S: 0,
-
-                      RGI: u.RGI * 5,
-                      RGO: u.RGO * 5,
-                      RRI: u.RRI * 5,
-                      RRO: u.RRO * 5,
-
-                      V: visitorPoints,
-                      121: oneToOnePoints,
-                      CEU: testimonialPoints,
-                      T: trainingPoints,
-
-                      // amount converted to points
+                      // ✅ ONLY 8 FIELDS
+                      Attendance: attendancePoints,
+                      Visitors: visitorPoints,
+                      Referrals: referralsPoints,
+                      "121": oneToOnePoints,
                       TYFCB: tyfcbPoints,
-
-                      totalPoints: computedTotal,
+                      Training: trainingPoints,
+                      Testimonials: testimonialPoints,
+                      Conversion: u.CON,
+                      totalPoints: totalPoints,
                     };
                   })}
                 />
