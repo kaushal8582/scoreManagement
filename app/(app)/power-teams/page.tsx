@@ -100,9 +100,9 @@ export default function PowerTeamsPage() {
                   {(() => {
                     // ===== POINT CALCULATIONS =====
                     const attendancePoints =
-                      (t.P + t.L + t.M + t.S) * 2 + t.A * -2;
+                      (t.P + t.M + t.S) * 2 + t.A * -2;
 
-                    const referralsGivenPoints = (t.RGI + t.RGO) * 5;
+                    const referralsGivenPoints = (t.RGI + t.RGO);
                     const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
 
                     const visitorsPoints = t.V * 10;
@@ -112,7 +112,7 @@ export default function PowerTeamsPage() {
                       Number(((t.TYFCB_amount || 0) / 1000).toFixed(2));
                     // const conversionPoints = t.CON * 25;
 
-                    const trainingPoints = t.CEU * 5;
+                    const trainingPoints = t.TR * 5;
                     const testimonialsPoints = t.T * 5;
 
                     // ===== FINAL 8 BOXES =====
@@ -151,7 +151,7 @@ export default function PowerTeamsPage() {
                       {
                         k: "Conversion",
                         label: "Conversion",
-                        v: t.CON,
+                        v: t.CON * 25,
                         tooltip: "Conversion",
                       },
                       {
@@ -243,16 +243,16 @@ export default function PowerTeamsPage() {
                   data={(userBreakdownByTeam[t.teamId] || []).map((u: any) => {
                     // ===== ATTENDANCE (Medical = -2) =====
                     const attendancePoints =
-                      (u.P + u.L + u.S) * 2 + // Present-like
+                      (u.P  + u.S) * 2 + // Present-like
                       u.M * -2 + // Medical = -2
                       u.A * -2; // Absent = -2
 
                     // ===== OTHER POINTS =====
-                    const referralsPoints = (u.RGI + u.RGO + u.RRI + u.RRO) * 5;
+                    const referralsPoints = (u.RGI + u.RGO );
                     const visitorPoints = u.V * 10;
                     const oneToOnePoints = u.oneToOne * 5;
-                    const trainingPoints = u.T * 5;
-                    const testimonialPoints = u.CEU * 5;
+                    const trainingPoints = u.TR * 5;
+                    const testimonialPoints = u.T * 5;
                     const tyfcbPoints =
                       Number(((u.TYFCB_amount || 0) / 1000).toFixed(2));
                     // const conversionPoints = u.CON * 25;
@@ -282,7 +282,7 @@ export default function PowerTeamsPage() {
                       TYFCB: tyfcbPoints,
                       Training: trainingPoints,
                       Testimonials: testimonialPoints,
-                      Conversion: u.CON,
+                      Conversion: u.CON * 25,
                       totalPoints: totalPoints,
                     };
                   })}

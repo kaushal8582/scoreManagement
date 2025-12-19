@@ -369,9 +369,9 @@ export default function DashboardPage() {
                   data={(() => {
                     // ===== POINT CALCULATIONS (same as boxes) =====
                     const attendancePointsRaw =
-                      (t.P + t.L + t.M + t.S) * 2 + t.A * -2;
+                      (t.P  + t.M + t.S) * 2 + t.A * -2;
 
-                    const referralsGivenPoints = (t.RGI + t.RGO) * 5;
+                    const referralsGivenPoints = (t.RGI + t.RGO);
                     const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
 
                     const visitorsPoints = t.V * 10;
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                     const tyfcbPoints =
                       Number(((t.TYFCB_amount || 0) / 1000).toFixed(2));
 
-                    const trainingPoints = t.CEU * 5;
+                    const trainingPoints = t.TR * 5;
                     const testimonialsPoints = t.T * 5;
 
                     return [
@@ -391,7 +391,7 @@ export default function DashboardPage() {
                       //   label: "Referrals Received",
                       //   value: referralsReceivedPoints,
                       // },
-                      { label: "Conversion", value: t.CON },
+                      { label: "Conversion", value: t.CON * 25 },
                       { label: "1-2-1", value: oneToOnePoints },
                       { label: "TYFCB", value: tyfcbPoints },
                       { label: "Training", value: trainingPoints },
@@ -416,18 +416,18 @@ export default function DashboardPage() {
           data={userBreakdown.map((item) => {
             // ===== ATTENDANCE (Medical = -2) =====
             const attendancePoints =
-              (item.P + item.L + item.S) * 2 + // present-like
+              (item.P  + item.S) * 2 + // present-like
               item.M * -2 + // medical = -2
               item.A * -2; // absent = -2
 
             // ===== OTHER POINTS =====
             const referralsPoints =
-              (item.RGI + item.RGO + item.RRI + item.RRO) * 5;
+              (item.RGI + item.RGO ) ;
 
             const visitorPoints = item.V * 10;
             const oneToOnePoints = item.oneToOne * 5;
 
-            const trainingPoints = item.CEU * 5;
+            const trainingPoints = item.TR * 5;
             const testimonialPoints = item.T * 5;
 
             const tyfcbPoints = Number(((item.TYFCB_amount || 0) / 1000).toFixed(2));
@@ -454,7 +454,7 @@ export default function DashboardPage() {
               TYFCB: tyfcbPoints,
               Training: trainingPoints,
               Testimonials: testimonialPoints,
-              Conversion: item.CON,
+              Conversion: item.CON *25,
               totalPoints: totalPoints,
             };
           })}

@@ -13,13 +13,13 @@ type SummaryBoxesProps = {
 // M (Medical) = -2
 // A (Absent) = -2
 const attendancePoints = (v: SummaryValues) =>
-  (v.P + v.L + v.S) * 2 +
+  (v.P + v.S) * 2 +
   (v.M || 0) * -2 +
   (v.A || 0) * -2;
 
 // Referrals (Given + Received)
 const referralPoints = (v: SummaryValues) =>
-  (v.RGI + v.RGO + v.RRI + v.RRO) * 5;
+  (v.RGI + v.RGO ) ;
 
 // TYFCB → ₹1000 = 1 point
 const tyfcbPoints = (v: SummaryValues) =>
@@ -45,43 +45,43 @@ export default function SummaryBoxes({ values }: SummaryBoxesProps) {
     {
       key: "visitors",
       label: "Visitors",
-      tooltip: "Visitors × 10",
+      tooltip: "Visitors",
       value: (values.V || 0) * 10,
     },
     {
       key: "referrals",
       label: "Referrals",
-      tooltip: "RGI + RGO + RRI + RRO × 5",
+      tooltip: "RGI + RGO ",
       value: referralPoints(values),
     },
     {
       key: "conversion",
       label: "Conversion",
       tooltip: "Total Conversions",
-      value: values.CON || 0,
+      value: values.CON * 25 || 0,
     },
     {
       key: "tyfcb",
       label: "TYFCB",
-      tooltip: "₹1000 = 1 Point",
+      tooltip: "Thank You For Closed Business",
       value: tyfcbPoints(values),
     },
     {
       key: "testimonials",
       label: "Testimonials",
-      tooltip: "Testimonials × 5",
+      tooltip: "Testimonials ",
       value: (values.T || 0) * 5,
     },
     {
       key: "training",
       label: "Training",
-      tooltip: "CEU × 5",
-      value: (values.CEU || 0) * 5,
+      tooltip: "Training",
+      value: (values.TR || 0) * 5,
     },
     {
       key: "oneToOne",
       label: "1-2-1",
-      tooltip: "1-2-1 Meetings × 5",
+      tooltip: "One to One Meetings Held",
       value: (values.oneToOne || 0) * 5,
     },
   ];
