@@ -18,7 +18,7 @@ type TabKey = "upload" | "teams" | "weekly";
 interface UserOption {
   value: string;
   label: string;
-  category : string;
+  category: string;
 }
 interface UserRow {
   _id: string;
@@ -87,12 +87,15 @@ export default function SettingsPage() {
 
         // conos
         setUserOptions(
-          usersData.map((u) => ({
-            value: u._id,
-            label: `${u.firstName} ${u.lastName}`,
-            category: u.category || "",
-          }))
+          usersData
+            .filter((u) => (u.category ?? "").toLowerCase() !== "admin")
+            .map((u) => ({
+              value: u._id,
+              label: `${u.firstName} ${u.lastName}`,
+              category: u.category || "",
+            }))
         );
+
         const totalsMap: Record<string, number> = {};
         totals.forEach((t) => {
           totalsMap[t.userId] = t.totalPoints;
@@ -126,12 +129,15 @@ export default function SettingsPage() {
       setUsers(usersData as any);
       setCurrentPage(1);
       setUserOptions(
-        usersData.map((u) => ({
-          value: u._id,
-          label: `${u.firstName} ${u.lastName}`,
-          category: u.category || "",
-        }))
+        usersData
+          .filter((u) => (u.category ?? "").toLowerCase() !== "admin")
+          .map((u) => ({
+            value: u._id,
+            label: `${u.firstName} ${u.lastName}`,
+            category: u.category || "",
+          }))
       );
+
       const totalsMap: Record<string, number> = {};
       totals.forEach((t) => {
         totalsMap[t.userId] = t.totalPoints;
@@ -225,16 +231,23 @@ export default function SettingsPage() {
   };
 
   const filteredUsers = users.filter((u) => {
+    // ❌ admin users hide
+    if ((u.category ?? "").toLowerCase() === "admin") {
+      return false;
+    }
+
     const q = userSearch.trim().toLowerCase();
     if (!q) return true;
+
     const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
     const email = (u.email ?? "").toLowerCase();
     const category = (u.category ?? "").toLowerCase();
-    console.log("u", u.teamId, u);
+
     const teamName =
       typeof u.teamId === "object" && u.teamId?.name
         ? u.teamId.name.toLowerCase()
         : "";
+
     return (
       fullName.includes(q) ||
       email.includes(q) ||
@@ -741,7 +754,7 @@ export default function SettingsPage() {
             {/* Body */}
             <div className="px-6 py-4">
               <p className="text-sm text-gray-700">
-                Are you sure you want to delete this team? 
+                Are you sure you want to delete this team?
               </p>
             </div>
 
@@ -773,10 +786,10 @@ export default function SettingsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="rounded-lg bg-white px-6 py-4 text-center shadow-xl">
             <div className="mb-2 text-sm font-medium text-gray-900">
-              Uploading users…
+              Uploading Memebers
             </div>
             <div className="text-xs text-gray-500">
-              Please wait while we process your Excel/CSV.
+              Please wait while we process your Excel.
             </div>
           </div>
         </div>
