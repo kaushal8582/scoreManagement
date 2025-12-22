@@ -66,6 +66,12 @@ export default function DashboardPage() {
   const [weekStartDate, setWeekStartDate] = useState<string>("");
   const [weekEndDate, setWeekEndDate] = useState<string>("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [user, setUser] = useState<any>({});
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(user);
+  }, []);
 
   console.log("userbre", userBreakdown);
 
@@ -142,6 +148,8 @@ export default function DashboardPage() {
     }
   };
 
+
+
   // Weekly reports deletion is handled inside the shared component
 
   return (
@@ -178,13 +186,14 @@ export default function DashboardPage() {
               Monthly
             </button> */}
           {/* </div> */}
-          <button
+          {user?.category!="guest" && <button
             className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
             onClick={() => setUploadModalOpen(true)}
             disabled={uploadingReport}
           >
             Upload Weekly Reports
-          </button>
+          </button>}
+          
         </div>
       </section>
       {categoryTotals && (
@@ -379,9 +388,9 @@ export default function DashboardPage() {
                   data={(() => {
                     // ===== POINT CALCULATIONS (same as boxes) =====
                     const attendancePointsRaw =
-                      (t.P + t.M + t.S) * 2 + t.A * -2;
+                      (t.P  + t.S) * 2 + t.A * -2+t.M * -2;
 
-                    const referralsGivenPoints = t.RGI + t.RGO;
+                    const referralsGivenPoints = (t.RGI + t.RGO)*5;
                     const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
 
                     const visitorsPoints = t.V * 10;
@@ -439,7 +448,7 @@ export default function DashboardPage() {
               item.A * -2; // absent = -2
 
             // ===== OTHER POINTS =====
-            const referralsPoints = item.RGI + item.RGO;
+            const referralsPoints = (item.RGI + item.RGO)*5;
 
             const visitorPoints = item.V * 10;
             const oneToOnePoints = item.oneToOne * 5;

@@ -71,6 +71,13 @@ export default function SettingsPage() {
   const [deleteTeamLoading, setDeleteTeamLoading] = useState(false);
   const [savingCaptainLoading, setSavingCaptainLoading] = useState(false);
   const pageSize = 100;
+  const [user, setUser] = useState<any>({});
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(user);
+  }, []);
+  
 
   useEffect(() => {
     let mounted = true;
@@ -324,7 +331,8 @@ export default function SettingsPage() {
                   (.xls/.xlsx).
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+
+              {user?.category !=="guest" && <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={async () => {
@@ -351,7 +359,8 @@ export default function SettingsPage() {
                     onChange={handleUserCsvUpload}
                   />
                 </label>
-              </div>
+              </div> }
+              
             </div>
 
             <div className="space-y-3">
@@ -403,7 +412,7 @@ export default function SettingsPage() {
         </div>}
 
                     {loading ?null :(
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-800 text-sm">
                   <thead className="bg-slate-50">
                     <tr>
@@ -617,7 +626,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 className="btn-primary disabled:opacity-60"
-                disabled={creatingTeam}
+                disabled={creatingTeam || user?.category === "guest"}
                 onClick={handleTeamSave}
               >
                 {creatingTeam ? "Saving…" : "Save team"}
@@ -672,6 +681,7 @@ export default function SettingsPage() {
                         </td>
                         <td className="px-3 py-2 text-sm">
                           <button
+                            disabled={user?.category === "guest"}
                             className="rounded-md border border-red-300 bg-white px-2 py-1 text-red-700 hover:bg-red-50"
                             onClick={() => {
                               setDeleteModalOpen(true);
@@ -681,6 +691,7 @@ export default function SettingsPage() {
                             Delete
                           </button>
                           <button
+                            disabled={user?.category === "guest"}
                             className="mt-2 rounded-md border border-gray-300 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50"
                             onClick={() => openCaptainModal(team._id)}
                           >

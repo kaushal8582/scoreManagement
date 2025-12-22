@@ -8,6 +8,12 @@ export default function WeeklyReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>({});
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(user);
+  }, []);
 
   async function loadReports() {
     setLoading(true);
@@ -51,7 +57,7 @@ export default function WeeklyReports() {
       {error && (
         <div className="mb-2 text-xs text-red-600">{error}</div>
       )}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
@@ -70,7 +76,8 @@ export default function WeeklyReports() {
                 <td className="px-3 py-2 text-right">
                   <button
                     className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
-                    disabled={deletingId === w._id}
+                    disabled={deletingId === w._id || user?.category === "guest"}
+
                     onClick={() => handleDeleteReport(w._id)}
                   >
                     {deletingId === w._id ? 'Deleting…' : 'Delete'}

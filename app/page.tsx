@@ -28,6 +28,7 @@ export default function HomePage() {
         resp = await register(firstName, lastName, email, password);
       }
       localStorage.setItem("token", resp.token);
+      localStorage.setItem("user", JSON.stringify(resp.user));
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Authentication failed");
@@ -37,7 +38,10 @@ export default function HomePage() {
   };
 
   return (
-    <main style={{background:"rgb(200, 201, 199)"}} className="flex min-h-screen items-center justify-center  px-4">
+    <main
+      style={{ background: "rgb(200, 201, 199)" }}
+      className="flex min-h-screen items-center justify-center  px-4"
+    >
       <div className="card w-full max-w-md p-8 relative !rounded-none">
         <div className="mb-6 text-center">
           {/* <div className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-brand-100 ring-1 ring-brand-500/40">
@@ -47,11 +51,15 @@ export default function HomePage() {
             Welcome back
           </h1> */}
 
-          <img
-            src="./loog.svg"
-            alt="SnabbTech Logo"
-            className="w-72 h-24 mx-auto"
-          />
+          <div className="flex items-center justify-center">
+            <img
+              src="./logo2.png"
+              alt="SnabbTech Logo"
+              className=" h-[50px] "
+            />
+            <h1 className="text-[40px] font-bold text-black" >Diamonds</h1>
+          </div>
+
           <p
             style={{ color: "rgb(99, 102, 106)" }}
             className="mt-1 text-[1.37rem] font-bold "
@@ -163,7 +171,7 @@ export default function HomePage() {
               rel="noreferrer"
               className="text-brand-600 underline"
             >
-             Ashish Garg (IT Consultant)
+              Ashish Garg (IT Consultant)
             </a>
           </span>
         </footer>

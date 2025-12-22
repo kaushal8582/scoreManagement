@@ -109,9 +109,9 @@ export default function PowerTeamsPage() {
                   {(() => {
                     // ===== POINT CALCULATIONS =====
                     const attendancePoints =
-                      (t.P + t.M + t.S) * 2 + t.A * -2;
+                      (t.P  + t.S) * 2 + t.A * -2 + t.M * -2;
 
-                    const referralsGivenPoints = (t.RGI + t.RGO);
+                    const referralsGivenPoints = (t.RGI + t.RGO)*5;
                     const referralsReceivedPoints = (t.RRI + t.RRO) * 5;
 
                     const visitorsPoints = t.V * 10;
@@ -131,19 +131,19 @@ export default function PowerTeamsPage() {
                         label: "Attendance",
                         v: attendancePoints,
                         tooltip:
-                          "Present , Late , Medical , Substitute , Absent ",
+                          "Present *2 + Medical *(-2) + Substitute*2 + Absent*(-2) ",
                       },
                       {
                         k: "visitors",
                         label: "Visitors",
                         v: visitorsPoints,
-                        tooltip: "Visitors",
+                        tooltip: "Visitors * 10",
                       },
                       {
                         k: "refGiven",
                         label: "Referrals",
                         v: referralsGivenPoints,
-                        tooltip: "RGI + RGO ",
+                        tooltip: "RGI + RGO × 5",
                       },
                       // {
                       //   k: "refReceived",
@@ -155,31 +155,31 @@ export default function PowerTeamsPage() {
                         k: "oneToOne",
                         label: "1-2-1",
                         v: oneToOnePoints,
-                        tooltip: "One to One Meetings",
+                        tooltip: "One to One Meetings × 5",
                       },
                       {
                         k: "Conversion",
                         label: "Conversion",
                         v: t.CON * 25,
-                        tooltip: "Conversion",
+                        tooltip: "Conversion × 25",
                       },
                       {
                         k: "tyfcb",
                         label: "TYFCB",
                         v: tyfcbPoints,
-                        tooltip: "Thank You For Closed Business",
+                        tooltip: "Thank You For Closed Business × 1",
                       },
                       {
                         k: "training",
                         label: "Training",
                         v: trainingPoints,
-                        tooltip: "Training ",
+                        tooltip: "Training × 5",
                       },
                       {
                         k: "testimonials",
                         label: "Testimonials",
                         v: testimonialsPoints,
-                        tooltip: "Testimonials ",
+                        tooltip: "Testimonials × 5",
                       },
                     ];
 
@@ -257,7 +257,7 @@ export default function PowerTeamsPage() {
                       u.A * -2; // Absent = -2
 
                     // ===== OTHER POINTS =====
-                    const referralsPoints = (u.RGI + u.RGO );
+                    const referralsPoints = (u.RGI + u.RGO ) * 5;
                     const visitorPoints = u.V * 10;
                     const oneToOnePoints = u.oneToOne * 5;
                     const trainingPoints = u.TR * 5;
