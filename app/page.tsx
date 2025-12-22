@@ -57,7 +57,7 @@ export default function HomePage() {
               alt="SnabbTech Logo"
               className=" h-[50px] "
             />
-            <h1 className="text-[40px] font-bold text-black" >Diamonds</h1>
+            <h1 className="text-[40px] font-bold text-[#d11d2f] mt-[8px]" >Diamonds</h1>
           </div>
 
           <p

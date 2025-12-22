@@ -30,8 +30,9 @@ const ACTIVITY_SERIES = [
    Custom X Axis Tick
    ======================= */
 const CustomXAxisTick = ({ x, y, payload, data }: any) => {
+ 
   const item = data[payload.index]; // FULL ROW
-  const total = item.Attendance + item.Conversion +item?.Referrals + item?.TYFCB + item?.Testimonials + item?.Training + item?.Visitors +item?.["121"]
+  const total = Math.floor(item.Attendance + item.Conversion +item?.Referrals + item?.TYFCB + item?.Testimonials + item?.Training + item?.Visitors +item?.["121"])
 
   return (
     <g transform={`translate(${x},${y})`}>
@@ -65,6 +66,10 @@ const CustomXAxisTick = ({ x, y, payload, data }: any) => {
 
 
 export function BuildingChart({ data }: any) {
+
+   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
+
   return (
     <div className="h-96 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -73,11 +78,39 @@ export function BuildingChart({ data }: any) {
           margin={{ top: 20, right: 50, left: 20, bottom: 55 }}
         >
           {/* X Axis with custom tick */}
-          <XAxis
+          {/* <XAxis
             dataKey="name "
             interval={0}
              tick={(props) => <CustomXAxisTick {...props} data={data} />}
-          />
+          /> */}
+
+          {isMobile ?<XAxis
+  dataKey="name"
+  angle={-45}
+  textAnchor="end"
+  height={80}
+  interval={0}
+  // tick={(props) => <CustomXAxisTick {...props} data={data} />}
+  
+/>:<XAxis
+  dataKey="name"
+  angle={-45}
+  textAnchor="end"
+  height={80}
+  interval={0}
+  tick={(props) => <CustomXAxisTick {...props} data={data} />}
+  
+/> }
+
+          <XAxis
+  dataKey="name"
+  angle={-45}
+  textAnchor="end"
+  height={80}
+  interval={0}
+  // tick={(props) => <CustomXAxisTick {...props} data={data} />}
+  
+/>
 
           {/* Left axis → stacked activities */}
           <YAxis yAxisId="left" tick={{ fill: "#9ca3af" }} />

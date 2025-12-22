@@ -187,7 +187,7 @@ export default function DashboardPage() {
             </button> */}
           {/* </div> */}
           {user?.category!="guest" && <button
-            className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
+            className="rounded-md border text-black border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
             onClick={() => setUploadModalOpen(true)}
             disabled={uploadingReport}
           >

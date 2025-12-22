@@ -95,7 +95,7 @@ export default function SettingsPage() {
         // conos
         setUserOptions(
           usersData
-            .filter((u) => (u.category ?? "").toLowerCase() !== "admin")
+            .filter((u) => (u.category ?? "").toLowerCase() !== "admin" && (u.category ?? "").toLowerCase() !== "guest")
             .map((u) => ({
               value: u._id,
               label: `${u.firstName} ${u.lastName}`,
@@ -137,7 +137,7 @@ export default function SettingsPage() {
       setCurrentPage(1);
       setUserOptions(
         usersData
-          .filter((u) => (u.category ?? "").toLowerCase() !== "admin")
+          .filter((u) => (u.category ?? "").toLowerCase() !== "admin" && (u.category ?? "").toLowerCase() !== "guest")
           .map((u) => ({
             value: u._id,
             label: `${u.firstName} ${u.lastName}`,
@@ -239,7 +239,7 @@ export default function SettingsPage() {
 
   const filteredUsers = users.filter((u) => {
     // ❌ admin users hide
-    if ((u.category ?? "").toLowerCase() === "admin") {
+    if ((u.category ?? "").toLowerCase() === "admin" || (u.category ?? "").toLowerCase() === "guest") {
       return false;
     }
 
@@ -270,7 +270,7 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-6">
+    <div className="flex flex-1 flex-col gap-6 text-black" >
       <section>
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
           Settings
