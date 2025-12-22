@@ -54,7 +54,7 @@ export default function PowerTeamsPage() {
   }, []);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
+    <div className="flex flex-1 flex-col gap-6 ">
       <div>
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl text-[#DC2627]">
           Power Teams

@@ -55,6 +55,7 @@ export function TeamPerformanceChart({ data }: Props) {
           <XAxis dataKey="week" stroke="#9ca3af" tickLine={false} />
           <YAxis stroke="#9ca3af" tickLine={false} />
           <Tooltip
+          
             contentStyle={{
               backgroundColor: "#f5f6f7ff",
               border: "1px solid #1f2937",

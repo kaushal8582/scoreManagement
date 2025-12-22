@@ -423,7 +423,12 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
             Top 7 performers
           </h2>
-          {/* <span className="text-xs text-gray-500">Stacked by category</span> */}
+           <button
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => (window.location.href = "/settings")}
+          >
+            Show all
+          </button>
         </div>
         <BuildingChart
           data={userBreakdown.map((item) => {
