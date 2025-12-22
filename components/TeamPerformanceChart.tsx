@@ -58,8 +58,9 @@ export function TeamPerformanceChart({ data }: Props) {
           
             contentStyle={{
               backgroundColor: "#f5f6f7ff",
-              border: "1px solid #1f2937",
-              borderRadius: 8
+              border: "1px solid #0e50acff",
+              borderRadius: 8,
+              color:"black"
             }}
           />
           <Legend />
