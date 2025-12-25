@@ -397,10 +397,10 @@ export default function DashboardPage() {
                     const oneToOnePoints = t.oneToOne * 5;
 
                     const tyfcbPoints = Number(
-                      ((t.TYFCB_amount || 0) / 1000).toFixed(2)
+                      ((t.TYFCB_amount || 0) / 10000).toFixed(2)
                     );
 
-                    const trainingPoints = t.TR * 5;
+                    const trainingPoints = t.TR * 15;
                     const testimonialsPoints = t.T * 5;
 
                     return [
@@ -453,11 +453,11 @@ export default function DashboardPage() {
             const visitorPoints = item.V * 10;
             const oneToOnePoints = item.oneToOne * 5;
 
-            const trainingPoints = item.TR * 5;
+            const trainingPoints = item.TR * 15;
             const testimonialPoints = item.T * 5;
 
             const tyfcbPoints = Number(
-              ((item.TYFCB_amount || 0) / 1000).toFixed(2)
+              ((item.TYFCB_amount || 0) / 10000).toFixed(2)
             );
 
             // ===== TOTAL =====

@@ -118,10 +118,10 @@ export default function PowerTeamsPage() {
                     const oneToOnePoints = t.oneToOne * 5;
 
                     const tyfcbPoints =
-                      Number(((t.TYFCB_amount || 0) / 1000).toFixed(2));
+                      Number(((t.TYFCB_amount || 0) / 10000).toFixed(2));
                     // const conversionPoints = t.CON * 25;
 
-                    const trainingPoints = t.TR * 5;
+                    const trainingPoints = t.TR * 15;
                     const testimonialsPoints = t.T * 5;
 
                     // ===== FINAL 8 BOXES =====
@@ -173,7 +173,7 @@ export default function PowerTeamsPage() {
                         k: "training",
                         label: "Training",
                         v: trainingPoints,
-                        tooltip: "Training × 5",
+                        tooltip: "Training × 15",
                       },
                       {
                         k: "testimonials",
@@ -222,9 +222,9 @@ export default function PowerTeamsPage() {
                     const oneToOnePoints = t.oneToOne * 5;
 
                     const tyfcbPoints =
-                      Math.floor((t.TYFCB_amount || 0) / 1000) * 1;
+                      Math.floor((t.TYFCB_amount || 0) / 10000) * 1;
 
-                    const trainingPoints = t.CEU * 5;
+                    const trainingPoints = t.CEU * 15;
                     const testimonialsPoints = t.T * 5;
 
                     return [
@@ -260,10 +260,10 @@ export default function PowerTeamsPage() {
                     const referralsPoints = (u.RGI + u.RGO ) * 5;
                     const visitorPoints = u.V * 10;
                     const oneToOnePoints = u.oneToOne * 5;
-                    const trainingPoints = u.TR * 5;
+                    const trainingPoints = u.TR * 15;
                     const testimonialPoints = u.T * 5;
                     const tyfcbPoints =
-                      Number(((u.TYFCB_amount || 0) / 1000).toFixed(2));
+                      Number(((u.TYFCB_amount || 0) / 10000).toFixed(2));
                     // const conversionPoints = u.CON * 25;
 
                     // ===== TOTAL POINTS =====

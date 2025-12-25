@@ -21,9 +21,9 @@ const attendancePoints = (v: SummaryValues) =>
 const referralPoints = (v: SummaryValues) =>
   (v.RGI + v.RGO ) ;
 
-// TYFCB → ₹1000 = 1 point
+// TYFCB → ₹10000 = 1 point
 const tyfcbPoints = (v: SummaryValues) =>
-  Number(((v.TYFCB_amount || 0) / 1000).toFixed(2));
+  Number(((v.TYFCB_amount || 0) / 10000).toFixed(2));
 
 
 /* ================= COMPONENT ================= */
@@ -75,8 +75,8 @@ export default function SummaryBoxes({ values }: SummaryBoxesProps) {
     {
       key: "training",
       label: "Training",
-      tooltip: "Training *5",
-      value: (values.TR || 0) * 5,
+      tooltip: "Training *15",
+      value: (values.TR || 0) * 15,
     },
     {
       key: "oneToOne",
