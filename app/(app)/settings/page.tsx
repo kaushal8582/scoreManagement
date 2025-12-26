@@ -468,7 +468,7 @@ export default function SettingsPage() {
                               : "-"}
                           </td>
                           <td className="px-3 py-2 text-sm">
-                            {totalsByUserId[user._id].toFixed(2) ?? 0}
+                            {totalsByUserId[user._id]?.toFixed(2) ?? 0}
                           </td>
                         </tr>
                       ))}
