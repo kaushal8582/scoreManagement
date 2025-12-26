@@ -785,7 +785,7 @@ export default function SettingsPage() {
                   </tr>
                   <tr className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-sm text-slate-700">TYFCB (Thank You For Closed Business)</td>
-                    <td className="px-4 py-3 text-sm font-medium text-green-700">1 point per ₹10,000</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">1 point per 10,000 with cap of 100 points on each report.</td>
                   </tr>
                   <tr className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-sm text-slate-700">Conversion</td>
