@@ -46,8 +46,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               onClick={() => router.push("/dashboard")}
               className="flex cursor-pointer items-center "
             >
+              <img src="/snabbTech.png" className="h-[30px]" />
+              <div className="mx-3">
+                <div className="h-[30px] w-[2px]  relative bg-white">
+                  <div className="h-[5px] w-[5px]  rounded-full absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white"></div>
+                  <div className="h-[5px] w-[5px]  rounded-full absolute bottom-[-4px] left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white"></div>
+                </div>
+              </div>
               <img src="/image.png" className="h-[30px]" />
-              <h1 className="text-[18px] sm:text-[22px] font-bold text-white mt-[10px]">
+              <h1 className="text-[14px] leading-[14px] sm:text-[22px] font-bold text-white mt-[0px] md:mt-[10px]">
                 Diamonds Power Team
               </h1>
             </div>
@@ -109,9 +116,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
                     className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                      active
-                        ? "bg-red-100 text-[#DC2627]"
-                        : "hover:bg-gray-100"
+                      active ? "bg-red-100 text-[#DC2627]" : "hover:bg-gray-100"
                     }`}
                   >
                     {item.label}
@@ -137,18 +142,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* ================= FOOTER ================= */}
       <footer className=" sticky bottom-0 border-t bg-white text-center text-black text-sm py-3">
-          <span>
-            Developed by{" "}
-            <a
-              href="https://bni-chandigarh.in/chandigarh-bni-diamonds/en-IN/memberdetails?encryptedMemberId=15%2FEZAjfSifjfpN2xT8tWQ%3D%3D&cmsv3=true&name=Ashish+Garg"
-              target="_blank"
-              rel="noreferrer"
-              className="text-brand-600 underline"
-            >
-              Ashish Garg (IT Consultant)
-            </a>
-          </span>
-        </footer>
+        <span>
+          Developed by{" "}
+          <a
+            href="https://bni-chandigarh.in/chandigarh-bni-diamonds/en-IN/memberdetails?encryptedMemberId=15%2FEZAjfSifjfpN2xT8tWQ%3D%3D&cmsv3=true&name=Ashish+Garg"
+            target="_blank"
+            rel="noreferrer"
+            className="text-brand-600 underline"
+          >
+            Ashish Garg (IT Consultant)
+          </a>
+        </span>
+      </footer>
     </div>
   );
 }

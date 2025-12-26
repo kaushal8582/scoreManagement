@@ -51,18 +51,40 @@ export default function HomePage() {
             Welcome back
           </h1> */}
 
-          <div className="flex items-center justify-center">
-            <img
-              src="./logo2.png"
-              alt="SnabbTech Logo"
-              className=" h-[50px] "
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            <img 
+              src="/snabbTackMainLogo.png" 
+              alt="SnabbTech Logo" 
+              className="h-[30px] sm:h-[40px] w-auto flex-shrink-0" 
             />
-            <h1 className="text-[40px] font-bold text-[#d11d2f] mt-[8px]" >Diamonds</h1>
+            <div className="mx-1 sm:mx-3 flex-shrink-0">
+              <div 
+                className="h-[30px] sm:h-[40px] md:h-[50px] w-[2px] relative" 
+                style={{backgroundColor: "rgb(99, 102, 106)"}}
+              >
+                <div 
+                  className="h-[4px] sm:h-[5px] w-[4px] sm:w-[5px] rounded-full absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" 
+                  style={{backgroundColor: "rgb(99, 102, 106)"}}
+                ></div>
+                <div 
+                  className="h-[4px] sm:h-[5px] w-[4px] sm:w-[5px] rounded-full absolute bottom-[-4px] left-1/2 -translate-x-1/2 -translate-y-1/2" 
+                  style={{backgroundColor: "rgb(99, 102, 106)"}}
+                ></div>
+              </div>
+            </div>
+            <img
+              src="/logo2.png"
+              alt="Diamonds Logo"
+              className="h-[30px] sm:h-[40px] md:h-[50px] w-auto flex-shrink-0"
+            />
+            <h1 className="text-[24px] mt-[6px] leading-[24px] md:mt-[0px] sm:text-[32px] md:text-[40px] font-bold text-[#d11d2f] whitespace-nowrap">
+              Diamonds
+            </h1>
           </div>
 
           <p
             style={{ color: "rgb(99, 102, 106)" }}
-            className="mt-1 text-[1.37rem] font-bold "
+            className="mt-2 sm:mt-3 text-base sm:text-xl md:text-[1.37rem] font-bold px-2"
           >
             Sign-in to Power Team Dashboard
           </p>
