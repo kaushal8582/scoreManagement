@@ -13,7 +13,7 @@ import {
 } from "../../../lib/api";
 import WeeklyReports from "../../../components/WeeklyReports";
 
-type TabKey = "upload" | "teams" | "weekly";
+type TabKey = "upload" | "teams" | "weekly" | "points";
 
 interface UserOption {
   value: string;
@@ -313,6 +313,16 @@ export default function SettingsPage() {
             >
               Weekly reports
             </button>
+            <button
+              className={`px-3 py-2 font-medium ${
+                activeTab === "points"
+                  ? "border-b-2 border-brand-500 text-black"
+                  : "text-black"
+              }`}
+              onClick={() => setActiveTab("points")}
+            >
+              Points Calculations
+            </button>
           </nav>
         </div>
 
@@ -458,7 +468,7 @@ export default function SettingsPage() {
                               : "-"}
                           </td>
                           <td className="px-3 py-2 text-sm">
-                            {totalsByUserId[user._id] ?? 0}
+                            {totalsByUserId[user._id].toFixed(2) ?? 0}
                           </td>
                         </tr>
                       ))}
@@ -710,6 +720,84 @@ export default function SettingsPage() {
         {activeTab === "weekly" && (
           <div className="mt-4">
             <WeeklyReports />
+          </div>
+        )}
+
+        {activeTab === "points" && (
+          <div className="mt-4 space-y-6">
+            <div>
+              <h2 className="text-sm font-semibold text-black sm:text-base">
+                Points Calculations
+              </h2>
+              <p className="text-xs text-slate-400 sm:text-sm">
+                Points are calculated based on these parameters
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Parameter
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Present</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+2</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Substitute</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+2</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Absent</td>
+                    <td className="px-4 py-3 text-sm font-medium text-red-700">-2</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Medical</td>
+                    <td className="px-4 py-3 text-sm font-medium text-red-700">-2</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Referrals Given Inside (RGI)</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+5</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Referrals Given Outside (RGO)</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+5</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Visitors</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+10</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">1-2-1 (One to One)</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+5</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Testimonials</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+5</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">TYFCB (Thank You For Closed Business)</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">1 point per ₹10,000</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Conversion</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+25</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">Training</td>
+                    <td className="px-4 py-3 text-sm font-medium text-green-700">+15</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </section>

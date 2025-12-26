@@ -32,7 +32,10 @@ const ACTIVITY_SERIES = [
 const CustomXAxisTick = ({ x, y, payload, data }: any) => {
  
   const item = data[payload.index]; // FULL ROW
-  const total = Math.floor(item.Attendance + item.Conversion +item?.Referrals + item?.TYFCB + item?.Testimonials + item?.Training + item?.Visitors +item?.["121"])
+  const total = (item.Attendance + item.Conversion +item?.Referrals + item?.TYFCB + item?.Testimonials + item?.Training + item?.Visitors +item?.["121"])
+
+
+
 
   return (
     <g transform={`translate(${x},${y})`}>
@@ -58,7 +61,7 @@ const CustomXAxisTick = ({ x, y, payload, data }: any) => {
         fontSize={11}
         fontWeight={600}
       >
-        Total: {total.toFixed(0)}
+        Total: {total.toFixed(2)}
       </text>
     </g>
   );
