@@ -52,6 +52,17 @@ export interface TeamPerformancePoint {
   week: string;
   team: string;
   points: number;
+  weekStartDate?: string;
+  weekEndDate?: string;
+}
+
+// Format date as DD.MM.YY (with year for desktop)
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
+  return `${day}.${month}.${year}`;
 }
 
 export async function fetchTeamStatsByWeek(): Promise<TeamPerformancePoint[]> {
@@ -59,13 +70,21 @@ export async function fetchTeamStatsByWeek(): Promise<TeamPerformancePoint[]> {
     headers: { ...authHeaders() }
   });
   const data = await handleJson<
-    { teamName: string; weekStartDate: string; totalPoints: number }[]
+    { teamName: string; weekStartDate: string; weekEndDate?: string; totalPoints: number }[]
   >(res);
-  return data.map((d) => ({
-    week: new Date(d.weekStartDate).toLocaleDateString(),
-    team: d.teamName,
-    points: d.totalPoints
-  }));
+  return data.map((d) => {
+    const startDate = formatDate(d.weekStartDate);
+    const endDate = d.weekEndDate ? formatDate(d.weekEndDate) : null;
+    const weekLabel = endDate ? `${startDate} - ${endDate}` : startDate;
+    
+    return {
+      week: weekLabel,
+      team: d.teamName,
+      points: d.totalPoints,
+      weekStartDate: d.weekStartDate,
+      weekEndDate: d.weekEndDate
+    };
+  });
 }
 
 export async function fetchTopTeams(limit = 3): Promise<{
