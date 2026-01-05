@@ -6,7 +6,85 @@ function getToken(): string | null {
   return localStorage.getItem("token");
 }
 
-// Ensure a concrete headers type to satisfy Fetch's HeadersInit
+// Helper function to handle logout when token is invalid/expired
+function handleLogout() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  // Redirect to login page
+  window.location.href = "/";
+}
+
+// Centralized API request function - all API calls go through here
+async function apiRequest<T>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> {
+  // Get token and add to headers
+  const token = getToken();
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
+  };
+  
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Make the request
+  const res = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  // console.log("res", res);
+
+  // Handle response - check for errors first
+  if (!res.ok) {
+    const text = await res.text();
+    let errorMessage = text || `Request failed: ${res.status}`;
+    
+    // Check for 401 Unauthorized status (token errors)
+    if (res.status === 401) {
+      // Try to parse JSON error message
+      handleLogout();
+      try {
+        const errorJson = JSON.parse(text);
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // If not JSON, use the text as is
+      }
+      
+      // Check if error message is related to token (case-insensitive)
+      const lowerMessage = errorMessage.toLowerCase();
+      if (
+        lowerMessage.includes("token") ||
+        lowerMessage.includes("invalid") ||
+        lowerMessage.includes("expired") ||
+        lowerMessage.includes("authorization") ||
+        lowerMessage.includes("unauthorized")
+      ) {
+        // Automatically log out user
+        handleLogout();
+        throw new Error("Session expired. Please login again.");
+      }
+    }
+    
+    throw new Error(errorMessage);
+  }
+
+  // Handle different response types for successful responses
+  const contentType = res.headers.get("content-type");
+  if (contentType && (contentType.includes("application/octet-stream") || contentType.includes("application/vnd.ms-excel") || contentType.includes("application/xls"))) {
+    return res.blob() as any;
+  } else if (contentType && contentType.includes("application/json")) {
+    return res.json();
+  }
+  
+  // Default to JSON for other content types
+  return res.json();
+}
+
+// Legacy function for backward compatibility (now uses apiRequest)
 function authHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
   const token = getToken();
@@ -24,12 +102,11 @@ async function handleJson<T>(res: Response): Promise<T> {
 
 // Auth
 export async function login(email: string, password: string) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
+  return apiRequest<{ user: any; token: string }>(`${API_BASE}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
   });
-  return handleJson<{ user: any; token: string }>(res);
 }
 
 export async function register(
@@ -39,12 +116,11 @@ export async function register(
   password: string,
   category?: string
 ) {
-  const res = await fetch(`${API_BASE}/auth/register`, {
+  return apiRequest<{ user: any; token: string }>(`${API_BASE}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ firstName, lastName, email, password, category })
   });
-  return handleJson<{ user: any; token: string }>(res);
 }
 
 // Dashboard
@@ -66,12 +142,9 @@ function formatDate(dateString: string): string {
 }
 
 export async function fetchTeamStatsByWeek(): Promise<TeamPerformancePoint[]> {
-  const res = await fetch(`${API_BASE}/dashboard/team-stats`, {
-    headers: { ...authHeaders() }
-  });
-  const data = await handleJson<
+  const data = await apiRequest<
     { teamName: string; weekStartDate: string; weekEndDate?: string; totalPoints: number }[]
-  >(res);
+  >(`${API_BASE}/dashboard/team-stats`);
   return data.map((d) => {
     const startDate = formatDate(d.weekStartDate);
     const endDate = d.weekEndDate ? formatDate(d.weekEndDate) : null;
@@ -92,12 +165,9 @@ export async function fetchTopTeams(limit = 3): Promise<{
   totalPoints: number;
   captain?: string | null;
 }[]> {
-  const res = await fetch(`${API_BASE}/dashboard/top-teams?limit=${limit}`, {
-    headers: { ...authHeaders() }
-  });
-  const data = await handleJson<
+  const data = await apiRequest<
     { teamName: string; totalPoints: number; captainFullName?: string | null }[]
-  >(res);
+  >(`${API_BASE}/dashboard/top-teams?limit=${limit}`);
   return data.map((d) => ({ team: d.teamName, totalPoints: d.totalPoints, captain: d.captainFullName ?? null }));
 }
 
@@ -106,13 +176,9 @@ export async function fetchTopPerformers(limit = 3): Promise<{
   team: string;
   totalPoints: number;
 }[]> {
-  const res = await fetch(
-    `${API_BASE}/dashboard/top-performers?limit=${limit}`,
-    { headers: { ...authHeaders() } }
-  );
-  const data = await handleJson<
+  const data = await apiRequest<
     { fullName: string; teamName?: string; totalPoints: number }[]
-  >(res);
+  >(`${API_BASE}/dashboard/top-performers?limit=${limit}`);
   return data.map((d) => ({
     user: d.fullName,
     team: d.teamName ?? "",
@@ -122,24 +188,18 @@ export async function fetchTopPerformers(limit = 3): Promise<{
 
 // Users
 export async function fetchUsers() {
-  const res = await fetch(`${API_BASE}/users`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<
+  return apiRequest<
     { _id: string; firstName: string; lastName: string; category?: string }[]
-  >(res);
+  >(`${API_BASE}/users`);
 }
 
 export async function fetchUserTotals() {
-  const res = await fetch(`${API_BASE}/dashboard/user-totals`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<{
+  return apiRequest<{
     userId: string;
     fullName: string;
     teamName?: string;
     totalPoints: number;
-  }[]>(res);
+  }[]>(`${API_BASE}/dashboard/user-totals`);
 }
 
 // New: Category totals across all weeks
@@ -151,10 +211,7 @@ export interface CategoryTotals {
 }
 
 export async function fetchCategoryTotals(): Promise<CategoryTotals> {
-  const res = await fetch(`${API_BASE}/dashboard/category-totals`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<CategoryTotals>(res);
+  return apiRequest<CategoryTotals>(`${API_BASE}/dashboard/category-totals`);
 }
 
 // New: Per-user breakdown (optionally filter by teamId)
@@ -172,10 +229,7 @@ export async function fetchUserBreakdown(limit = 7, teamId?: string): Promise<Us
   const params = new URLSearchParams();
   params.set('limit', String(limit));
   if (teamId) params.set('teamId', teamId);
-  const res = await fetch(`${API_BASE}/dashboard/user-breakdown?${params.toString()}`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<UserBreakdownRow[]>(res);
+  return apiRequest<UserBreakdownRow[]>(`${API_BASE}/dashboard/user-breakdown?${params.toString()}`);
 }
 
 // New: Per-team breakdown
@@ -190,34 +244,23 @@ export interface TeamBreakdownRow {
 }
 
 export async function fetchTeamBreakdown(): Promise<TeamBreakdownRow[]> {
-  const res = await fetch(`${API_BASE}/dashboard/team-breakdown`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<TeamBreakdownRow[]>(res);
+  return apiRequest<TeamBreakdownRow[]>(`${API_BASE}/dashboard/team-breakdown`);
 }
 
 export async function uploadUsersCsv(file: File) {
   const fd = new FormData();
   fd.append("file", file);
-  const res = await fetch(`${API_BASE}/users/upload-csv`, {
+  return apiRequest<any>(`${API_BASE}/users/upload-csv`, {
     method: "POST",
-    headers: { ...authHeaders() },
     body: fd
   });
-  return handleJson<any>(res);
 }
 
 // Download sample users Excel (.xls) file
 export async function downloadUsersSampleXls() {
-  const res = await fetch(`${API_BASE}/users/sample-xls`, {
-    method: "GET",
-    headers: { ...authHeaders() }
+  const blob = await apiRequest<Blob>(`${API_BASE}/users/sample-xls`, {
+    method: "GET"
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to download sample XLS");
-  }
-  const blob = await res.blob();
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -230,48 +273,39 @@ export async function downloadUsersSampleXls() {
 
 // Teams
 export async function createTeam(name: string, userIds: string[]) {
-  const res = await fetch(`${API_BASE}/teams`, {
+  return apiRequest<any>(`${API_BASE}/teams`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, userIds })
   });
-  return handleJson<any>(res);
 }
 
 export async function fetchTeams() {
-  const res = await fetch(`${API_BASE}/teams`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<any[]>(res);
+  return apiRequest<any[]>(`${API_BASE}/teams`);
 }
 
 export async function updateTeam(id: string, payload: { name?: string; userIds?: string[]; captainUserId?: string | null }) {
-  const res = await fetch(`${API_BASE}/teams/${id}`, {
+  return apiRequest<any>(`${API_BASE}/teams/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  return handleJson<any>(res);
 }
 
 export async function deleteTeam(id: string) {
-  const res = await fetch(`${API_BASE}/teams/${id}`, {
-    method: 'DELETE',
-    headers: { ...authHeaders() }
+  return apiRequest<{ deletedTeamId: string }>(`${API_BASE}/teams/${id}`, {
+    method: 'DELETE'
   });
-  return handleJson<{ deletedTeamId: string }>(res);
 }
 
 // Reports
 export async function uploadWeeklyReport(file: File) {
   const fd = new FormData();
   fd.append("file", file);
-  const res = await fetch(`${API_BASE}/reports/upload-weekly`, {
+  return apiRequest<any>(`${API_BASE}/reports/upload-weekly`, {
     method: "POST",
-    headers: { ...authHeaders() },
     body: fd
   });
-  return handleJson<any>(res);
 }
 
 // Enhanced: upload multiple CSVs with explicit week start/end dates
@@ -284,12 +318,10 @@ export async function uploadWeeklyReports(
   files.forEach((f) => fd.append("files", f));
   fd.append("weekStartDate", weekStartDate);
   fd.append("weekEndDate", weekEndDate);
-  const res = await fetch(`${API_BASE}/reports/upload-weekly`, {
+  return apiRequest<any>(`${API_BASE}/reports/upload-weekly`, {
     method: "POST",
-    headers: { ...authHeaders() },
     body: fd
   });
-  return handleJson<any>(res);
 }
 
 export interface WeeklyReportSummary {
@@ -300,16 +332,11 @@ export interface WeeklyReportSummary {
 }
 
 export async function fetchWeeklyReports(): Promise<WeeklyReportSummary[]> {
-  const res = await fetch(`${API_BASE}/reports/weekly`, {
-    headers: { ...authHeaders() }
-  });
-  return handleJson<WeeklyReportSummary[]>(res);
+  return apiRequest<WeeklyReportSummary[]>(`${API_BASE}/reports/weekly`);
 }
 
 export async function deleteWeeklyReport(id: string) {
-  const res = await fetch(`${API_BASE}/reports/weekly/${id}`, {
-    method: "DELETE",
-    headers: { ...authHeaders() }
+  return apiRequest<{ deletedWeekId: string; deletedStats: number }>(`${API_BASE}/reports/weekly/${id}`, {
+    method: "DELETE"
   });
-  return handleJson<{ deletedWeekId: string; deletedStats: number }>(res);
 }
