@@ -1,5 +1,5 @@
 // Allow overriding API base via env
-export const API_BASE = "https://bni-api.snabbtech.com/api";
+export const API_BASE = "http://localhost:3220/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -141,10 +141,13 @@ function formatDate(dateString: string): string {
   return `${day}.${month}.${year}`;
 }
 
-export async function fetchTeamStatsByWeek(): Promise<TeamPerformancePoint[]> {
+export async function fetchTeamStatsByWeek(monthYear?: string): Promise<TeamPerformancePoint[]> {
+  const params = new URLSearchParams();
+  if (monthYear) params.set('monthYear', monthYear);
+  const url = `${API_BASE}/dashboard/team-stats${params.toString() ? `?${params.toString()}` : ''}`;
   const data = await apiRequest<
     { teamName: string; weekStartDate: string; weekEndDate?: string; totalPoints: number }[]
-  >(`${API_BASE}/dashboard/team-stats`);
+  >(url);
   return data.map((d) => {
     const startDate = formatDate(d.weekStartDate);
     const endDate = d.weekEndDate ? formatDate(d.weekEndDate) : null;
@@ -160,25 +163,31 @@ export async function fetchTeamStatsByWeek(): Promise<TeamPerformancePoint[]> {
   });
 }
 
-export async function fetchTopTeams(limit = 3): Promise<{
+export async function fetchTopTeams(limit = 3, monthYear?: string): Promise<{
   team: string;
   totalPoints: number;
   captain?: string | null;
 }[]> {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  if (monthYear) params.set('monthYear', monthYear);
   const data = await apiRequest<
     { teamName: string; totalPoints: number; captainFullName?: string | null }[]
-  >(`${API_BASE}/dashboard/top-teams?limit=${limit}`);
+  >(`${API_BASE}/dashboard/top-teams?${params.toString()}`);
   return data.map((d) => ({ team: d.teamName, totalPoints: d.totalPoints, captain: d.captainFullName ?? null }));
 }
 
-export async function fetchTopPerformers(limit = 3): Promise<{
+export async function fetchTopPerformers(limit = 3, monthYear?: string): Promise<{
   user: string;
   team: string;
   totalPoints: number;
 }[]> {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  if (monthYear) params.set('monthYear', monthYear);
   const data = await apiRequest<
     { fullName: string; teamName?: string; totalPoints: number }[]
-  >(`${API_BASE}/dashboard/top-performers?limit=${limit}`);
+  >(`${API_BASE}/dashboard/top-performers?${params.toString()}`);
   return data.map((d) => ({
     user: d.fullName,
     team: d.teamName ?? "",
@@ -210,8 +219,11 @@ export interface CategoryTotals {
   totalPoints: number;
 }
 
-export async function fetchCategoryTotals(): Promise<CategoryTotals> {
-  return apiRequest<CategoryTotals>(`${API_BASE}/dashboard/category-totals`);
+export async function fetchCategoryTotals(monthYear?: string): Promise<CategoryTotals> {
+  const params = new URLSearchParams();
+  if (monthYear) params.set('monthYear', monthYear);
+  const url = `${API_BASE}/dashboard/category-totals${params.toString() ? `?${params.toString()}` : ''}`;
+  return apiRequest<CategoryTotals>(url);
 }
 
 // New: Per-user breakdown (optionally filter by teamId)
@@ -225,10 +237,11 @@ export interface UserBreakdownRow {
   totalPoints: number;
 }
 
-export async function fetchUserBreakdown(limit = 7, teamId?: string): Promise<UserBreakdownRow[]> {
+export async function fetchUserBreakdown(limit = 7, teamId?: string, monthYear?: string): Promise<UserBreakdownRow[]> {
   const params = new URLSearchParams();
   params.set('limit', String(limit));
   if (teamId) params.set('teamId', teamId);
+  if (monthYear) params.set('monthYear', monthYear);
   return apiRequest<UserBreakdownRow[]>(`${API_BASE}/dashboard/user-breakdown?${params.toString()}`);
 }
 
@@ -243,8 +256,11 @@ export interface TeamBreakdownRow {
   captainFullName?: string | null;
 }
 
-export async function fetchTeamBreakdown(): Promise<TeamBreakdownRow[]> {
-  return apiRequest<TeamBreakdownRow[]>(`${API_BASE}/dashboard/team-breakdown`);
+export async function fetchTeamBreakdown(monthYear?: string): Promise<TeamBreakdownRow[]> {
+  const params = new URLSearchParams();
+  if (monthYear) params.set('monthYear', monthYear);
+  const url = `${API_BASE}/dashboard/team-breakdown${params.toString() ? `?${params.toString()}` : ''}`;
+  return apiRequest<TeamBreakdownRow[]>(url);
 }
 
 export async function uploadUsersCsv(file: File) {
@@ -308,16 +324,18 @@ export async function uploadWeeklyReport(file: File) {
   });
 }
 
-// Enhanced: upload multiple CSVs with explicit week start/end dates
+// Enhanced: upload multiple CSVs with explicit week start/end dates and month/year
 export async function uploadWeeklyReports(
   files: File[],
   weekStartDate: string,
-  weekEndDate: string
+  weekEndDate: string,
+  monthYear: string
 ) {
   const fd = new FormData();
   files.forEach((f) => fd.append("files", f));
   fd.append("weekStartDate", weekStartDate);
   fd.append("weekEndDate", weekEndDate);
+  fd.append("monthYear", monthYear);
   return apiRequest<any>(`${API_BASE}/reports/upload-weekly`, {
     method: "POST",
     body: fd
@@ -328,6 +346,8 @@ export interface WeeklyReportSummary {
   _id: string;
   weekStartDate: string;
   weekEndDate: string;
+  month?: number;
+  year?: number;
   uploadedAt: string;
 }
 

@@ -70,6 +70,12 @@ export default function SettingsPage() {
   >(null);
   const [deleteTeamLoading, setDeleteTeamLoading] = useState(false);
   const [savingCaptainLoading, setSavingCaptainLoading] = useState(false);
+  const [editModalTeamId, setEditModalTeamId] = useState<string | null>(null);
+  const [editingTeamName, setEditingTeamName] = useState<string>("");
+  const [editingTeamUserIds, setEditingTeamUserIds] = useState<string[]>([]);
+  const [originalTeamName, setOriginalTeamName] = useState<string>("");
+  const [originalTeamUserIds, setOriginalTeamUserIds] = useState<string[]>([]);
+  const [updatingTeam, setUpdatingTeam] = useState(false);
   const pageSize = 100;
   const [user, setUser] = useState<any>({});
 
@@ -235,6 +241,61 @@ export default function SettingsPage() {
       setCaptainModalTeamId(null);
       setSelectedCaptainUserId(null);
     }
+  };
+
+  const openEditModal = (team: TeamRow) => {
+    setEditModalTeamId(team._id);
+    setEditingTeamName(team.name);
+    setEditingTeamUserIds(team.users.map(u => u._id));
+    // Store original values to compare later
+    setOriginalTeamName(team.name);
+    setOriginalTeamUserIds(team.users.map(u => u._id));
+  };
+
+  // Check if any changes were made
+  const hasTeamChanges = () => {
+    if (!editModalTeamId) return false;
+    const nameChanged = editingTeamName !== originalTeamName;
+    const membersChanged = 
+      editingTeamUserIds.length !== originalTeamUserIds.length ||
+      !editingTeamUserIds.every(id => originalTeamUserIds.includes(id)) ||
+      !originalTeamUserIds.every(id => editingTeamUserIds.includes(id));
+    return nameChanged || membersChanged;
+  };
+
+  const handleUpdateTeam = async () => {
+    if (!editModalTeamId || !editingTeamName) return;
+    setUpdatingTeam(true);
+    try {
+      await updateTeam(editModalTeamId, {
+        name: editingTeamName,
+        userIds: editingTeamUserIds,
+      });
+      const teamsData = await fetchTeams();
+      const usersData = await fetchUsers();
+      const totals = await fetchUserTotals();
+      const totalsMap: Record<string, number> = {};
+      totals.forEach((t) => {
+        totalsMap[t.userId] = t.totalPoints;
+      });
+      setUsers(usersData as any);
+      setTeams(teamsData as any);
+      setEditModalTeamId(null);
+      setEditingTeamName("");
+      setEditingTeamUserIds([]);
+      setOriginalTeamName("");
+      setOriginalTeamUserIds([]);
+      setUpdatingTeam(false);
+    } catch (err: any) {
+      setUpdatingTeam(false);
+      setError(err.message || "Failed to update team");
+    }
+  };
+
+  const toggleEditTeamUserSelection = (id: string) => {
+    setEditingTeamUserIds((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+    );
   };
 
   const filteredUsers = users.filter((u) => {
@@ -690,23 +751,59 @@ export default function SettingsPage() {
                           )}
                         </td>
                         <td className="px-3 py-2 text-sm">
-                          <button
-                            disabled={user?.category === "guest"}
-                            className="rounded-md border border-red-300 bg-white px-2 py-1 text-red-700 hover:bg-red-50"
-                            onClick={() => {
-                              setDeleteModalOpen(true);
-                              setDeleteModalTeamId(team._id);
-                            }}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            disabled={user?.category === "guest"}
-                            className="mt-2 rounded-md border border-gray-300 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50"
-                            onClick={() => openCaptainModal(team._id)}
-                          >
-                            Make captain
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              disabled={user?.category === "guest"}
+                              className="rounded-md border border-blue-300 bg-white p-1.5 text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => openEditModal(team)}
+                              title="Edit team"
+                            >
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              disabled={user?.category === "guest"}
+                              className="rounded-md border border-red-300 bg-white p-1.5 text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => {
+                                setDeleteModalOpen(true);
+                                setDeleteModalTeamId(team._id);
+                              }}
+                              title="Delete team"
+                            >
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              disabled={user?.category === "guest"}
+                              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => openCaptainModal(team._id)}
+                              title="Make captain"
+                            >
+                              Make captain
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -841,6 +938,95 @@ export default function SettingsPage() {
                 onClick={saveCaptain}
               >
                 {savingCaptainLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {editModalTeamId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-2xl rounded-lg bg-white p-6 text-gray-900 shadow-xl">
+            <div className="mb-4 text-lg font-semibold">Edit Team</div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Team name
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  placeholder="e.g. Alpha Squad"
+                  value={editingTeamName}
+                  onChange={(e) => setEditingTeamName(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Members
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    Selected: {editingTeamUserIds.length}
+                  </span>
+                </div>
+                <div className="max-h-60 space-y-1 overflow-auto rounded-lg border border-slate-300 bg-white p-2 text-sm">
+                  {userOptions
+                    .filter((o) =>
+                      o.label.toLowerCase().includes(memberSearch.trim().toLowerCase())
+                    )
+                    .map((option) => {
+                      const selected = editingTeamUserIds.includes(option.value);
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => toggleEditTeamUserSelection(option.value)}
+                          className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left ${
+                            selected
+                              ? "bg-red-50 text-red-700"
+                              : "text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span>
+                            {option.label}{" "}
+                            <sub className="text-xs text-slate-500">
+                              ({option.category})
+                            </sub>
+                          </span>
+                          {selected && (
+                            <span className="badge bg-red-600 text-xs text-white">
+                              Selected
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm"
+                onClick={() => {
+                  setEditModalTeamId(null);
+                  setEditingTeamName("");
+                  setEditingTeamUserIds([]);
+                  setOriginalTeamName("");
+                  setOriginalTeamUserIds([]);
+                }}
+                disabled={updatingTeam}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-60"
+                disabled={!editingTeamName || updatingTeam || !hasTeamChanges()}
+                onClick={handleUpdateTeam}
+              >
+                {updatingTeam ? "Updating..." : "Update Team"}
               </button>
             </div>
           </div>

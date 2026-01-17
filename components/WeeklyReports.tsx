@@ -63,28 +63,38 @@ export default function WeeklyReports() {
             <tr>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Week start</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Week end</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Month</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Uploaded</th>
               <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {weeklyReports.map((w) => (
-              <tr key={w._id} className="hover:bg-slate-50">
-                <td className="px-3 py-2">{new Date(w.weekStartDate).toLocaleDateString()}</td>
-                <td className="px-3 py-2">{new Date(w.weekEndDate).toLocaleDateString()}</td>
-                <td className="px-3 py-2">{new Date(w.uploadedAt).toLocaleString()}</td>
-                <td className="px-3 py-2 text-right">
-                  <button
-                    className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
-                    disabled={deletingId === w._id || user?.category === "guest"}
+            {weeklyReports.map((w) => {
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthDisplay = w.month && w.year 
+                ? `${monthNames[w.month - 1]} ${w.year}` 
+                : "null";
+              
+              return (
+                <tr key={w._id} className="hover:bg-slate-50">
+                  <td className="px-3 py-2">{new Date(w.weekStartDate).toLocaleDateString()}</td>
+                  <td className="px-3 py-2">{new Date(w.weekEndDate).toLocaleDateString()}</td>
+                  <td className="px-3 py-2">{monthDisplay}</td>
+                  <td className="px-3 py-2">{new Date(w.uploadedAt).toLocaleString()}</td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                      disabled={deletingId === w._id || user?.category === "guest"}
 
-                    onClick={() => handleDeleteReport(w._id)}
-                  >
-                    {deletingId === w._id ? 'Deleting…' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
-            ))}
+                      onClick={() => handleDeleteReport(w._id)}
+                    >
+                      {deletingId === w._id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

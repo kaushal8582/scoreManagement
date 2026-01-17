@@ -65,8 +65,10 @@ export default function DashboardPage() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [weekStartDate, setWeekStartDate] = useState<string>("");
   const [weekEndDate, setWeekEndDate] = useState<string>("");
+  const [monthYear, setMonthYear] = useState<string>("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [user, setUser] = useState<any>({});
+  const [selectedMonthYear, setSelectedMonthYear] = useState<string>("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -81,14 +83,15 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       try {
+        const monthYearFilter = selectedMonthYear || undefined;
         const [stats, teams, performers, totals, usersB, teamsB] =
           await Promise.all([
-            fetchTeamStatsByWeek(),
-            fetchTopTeams(3),
-            fetchTopPerformers(3),
-            fetchCategoryTotals(),
-            fetchUserBreakdown(7),
-            fetchTeamBreakdown(),
+            fetchTeamStatsByWeek(monthYearFilter),
+            fetchTopTeams(3, monthYearFilter),
+            fetchTopPerformers(3, monthYearFilter),
+            fetchCategoryTotals(monthYearFilter),
+            fetchUserBreakdown(7, undefined, monthYearFilter),
+            fetchTeamBreakdown(monthYearFilter),
           ]);
         if (!mounted) return;
         setPerformanceData(stats);
@@ -108,7 +111,7 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [selectedMonthYear]);
 
   const handleCsvSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
@@ -116,20 +119,21 @@ export default function DashboardPage() {
   };
 
   const handleUploadSubmit = async () => {
-    if (!weekStartDate || !weekEndDate || selectedFiles.length === 0) return;
+    if (!weekStartDate || !weekEndDate || !monthYear || selectedFiles.length === 0) return;
     try {
       setError(null);
       setUploadingReport(true);
-      await uploadWeeklyReports(selectedFiles, weekStartDate, weekEndDate);
+      await uploadWeeklyReports(selectedFiles, weekStartDate, weekEndDate, monthYear);
       // Refresh ALL dashboard data to reflect upload everywhere
+      const monthYearFilter = selectedMonthYear || undefined;
       const [stats, teams, performers, totals, usersB, teamsB] =
         await Promise.all([
-          fetchTeamStatsByWeek(),
-          fetchTopTeams(3),
-          fetchTopPerformers(3),
-          fetchCategoryTotals(),
-          fetchUserBreakdown(7),
-          fetchTeamBreakdown(),
+          fetchTeamStatsByWeek(monthYearFilter),
+          fetchTopTeams(3, monthYearFilter),
+          fetchTopPerformers(3, monthYearFilter),
+          fetchCategoryTotals(monthYearFilter),
+          fetchUserBreakdown(7, undefined, monthYearFilter),
+          fetchTeamBreakdown(monthYearFilter),
         ]);
       setPerformanceData(stats);
       setTopTeamsData(teams);
@@ -140,6 +144,7 @@ export default function DashboardPage() {
       setSelectedFiles([]);
       setWeekStartDate("");
       setWeekEndDate("");
+      setMonthYear("");
       setUploadModalOpen(false);
     } catch (err: any) {
       setError(err.message || "Upload failed");
@@ -164,28 +169,65 @@ export default function DashboardPage() {
           </p> */}
         </div>
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-          {/* <div className="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white p-1 text-xs font-medium text-gray-700 sm:text-sm"> */}
-          {/* <button
-              className={`flex-1 rounded-full px-3 py-1 transition ${
-                timeframe === "weekly"
-                  ? "bg-brand-600 text-white"
-                  : "text-gray-700 hover:text-gray-900"
-              }`}
-              onClick={() => setTimeframe("weekly")}
+          {/* Month/Year Filter */}
+          <div className="flex items-center gap-2">
+            <select
+              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+              value={selectedMonthYear ? selectedMonthYear.split('-')[1] || '' : ''}
+              onChange={(e) => {
+                const month = e.target.value;
+                if (month) {
+                  // If month is selected but no year yet, set default year to 2026
+                  const year = selectedMonthYear ? selectedMonthYear.split('-')[0] : '2026';
+                  setSelectedMonthYear(`${year}-${month}`);
+                } else {
+                  setSelectedMonthYear('');
+                }
+              }}
             >
-              Weekly
-            </button> */}
-          {/* <button
-              className={`flex-1 rounded-full px-3 py-1 transition ${
-                timeframe === "monthly"
-                  ? "bg-brand-600 text-white"
-                  : "text-gray-700 hover:text-gray-900"
-              }`}
-              onClick={() => setTimeframe("monthly")}
-            >
-              Monthly
-            </button> */}
-          {/* </div> */}
+              <option value="">Weekly</option>
+              <option value="01">Jan</option>
+              <option value="02">Feb</option>
+              <option value="03">Mar</option>
+              <option value="04">Apr</option>
+              <option value="05">May</option>
+              <option value="06">Jun</option>
+              <option value="07">Jul</option>
+              <option value="08">Aug</option>
+              <option value="09">Sep</option>
+              <option value="10">Oct</option>
+              <option value="11">Nov</option>
+              <option value="12">Dec</option>
+            </select>
+            {selectedMonthYear && selectedMonthYear.split('-')[1] && (
+              <select
+                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                value={selectedMonthYear ? selectedMonthYear.split('-')[0] || '' : ''}
+                onChange={(e) => {
+                  const year = e.target.value;
+                  const month = selectedMonthYear ? selectedMonthYear.split('-')[1] : '';
+                  if (year && month) {
+                    setSelectedMonthYear(`${year}-${month}`);
+                  } else if (!year) {
+                    setSelectedMonthYear('');
+                  }
+                }}
+              >
+                <option value="">Year</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            )}
+            {selectedMonthYear && (
+              <button
+                className="text-xs text-gray-600 hover:text-gray-800 px-2 py-1 rounded border border-gray-300"
+                onClick={() => setSelectedMonthYear('')}
+                title="Clear filter"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           {user?.category!="guest" && <button
             className="rounded-md border text-black border-gray-300 bg-white px-3 py-1 text-sm disabled:opacity-60"
             onClick={() => setUploadModalOpen(true)}
@@ -274,75 +316,270 @@ export default function DashboardPage() {
       )}
 
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-lg rounded-lg bg-white p-4 text-gray-900 shadow-xl">
-            <div className="mb-2 text-sm font-semibold">
-              Upload weekly reports
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input
-                type="date"
-                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
-                value={weekStartDate}
-                onChange={(e) => setWeekStartDate(e.target.value)}
-                disabled={uploadingReport}
-              />
-              <span className="text-xs text-gray-500">to</span>
-              <input
-                type="date"
-                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
-                value={weekEndDate}
-                onChange={(e) => setWeekEndDate(e.target.value)}
-                disabled={uploadingReport}
-              />
-            </div>
-            <div className="mt-3">
-              <label
-                className={`btn-ghost cursor-pointer border border-dashed border-gray-300 text-xs sm:text-sm ${
-                  uploadingReport ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-              >
-                <span>
-                  {selectedFiles.length > 0
-                    ? `${selectedFiles.length} file(s) selected`
-                    : "Select Excel files"}
-                </span>
-                <input
-                  type="file"
-                  accept=".xls,.xlsx,.csv"
-                  multiple
-                  className="hidden"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
+            {/* Header */}
+            <div className="border-b border-gray-200 bg-gradient-to-r from-red-50 to-white px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Upload Weekly Reports</h2>
+                  <p className="mt-1 text-xs text-gray-500">Upload Excel files for weekly performance tracking</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (!uploadingReport) {
+                      setUploadModalOpen(false);
+                      setSelectedFiles([]);
+                      setWeekStartDate("");
+                      setWeekEndDate("");
+                      setMonthYear("");
+                      setError(null);
+                    }
+                  }}
                   disabled={uploadingReport}
-                  onChange={handleCsvSelect}
-                />
-              </label>
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            {error && <div className="mt-2 text-xs text-red-600">{error}</div>}
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                className={`rounded-md border border-gray-300 bg-white px-3 py-1 text-sm ${
-                  uploadingReport ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-                onClick={() => {
-                  if (!uploadingReport) setUploadModalOpen(false);
-                }}
-                // disabled={uploadingReport}'
-                disabled={uploadingReport}
-              >
-                Cancel
-              </button>
-              <button
-                className="rounded-md bg-brand-600 px-3 py-1 text-sm text-white disabled:opacity-60"
-                onClick={handleUploadSubmit}
-                disabled={
-                  uploadingReport ||
-                  !weekStartDate ||
-                  !weekEndDate ||
-                  selectedFiles.length === 0
-                }
-              >
-                {uploadingReport ? "Uploading…" : "Upload"}
-              </button>
+
+            {/* Form Content */}
+            <div className="p-6">
+              <div className="space-y-5">
+                {/* Week Date Range */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Week Date Range <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <input
+                        type="date"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        value={weekStartDate}
+                        onChange={(e) => setWeekStartDate(e.target.value)}
+                        disabled={uploadingReport}
+                        required
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Start Date</p>
+                    </div>
+                    <div className="">
+                      <span className="text-sm font-medium text-gray-400">to</span>
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="date"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        value={weekEndDate}
+                        onChange={(e) => setWeekEndDate(e.target.value)}
+                        disabled={uploadingReport}
+                        required
+                      />
+                      <p className="mt-1 text-xs text-gray-500">End Date</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Month/Year */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Month & Year <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <select
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        value={monthYear ? monthYear.split('-')[1] || '' : ''}
+                        onChange={(e) => {
+                          const month = e.target.value;
+                          const year = monthYear ? monthYear.split('-')[0] : new Date().getFullYear().toString();
+                          if (month) {
+                            setMonthYear(`${year}-${month}`);
+                          } else {
+                            setMonthYear('');
+                          }
+                        }}
+                        disabled={uploadingReport}
+                        required
+                      >
+                        <option value="">Select Month</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <select
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        value={monthYear ? monthYear.split('-')[0] || '' : ''}
+                        onChange={(e) => {
+                          const year = e.target.value;
+                          const month = monthYear ? monthYear.split('-')[1] : (new Date().getMonth() + 1).toString().padStart(2, '0');
+                          if (year) {
+                            setMonthYear(`${year}-${month}`);
+                          } else {
+                            setMonthYear('');
+                          }
+                        }}
+                        disabled={uploadingReport}
+                        required
+                      >
+                        <option value="">Select Year</option>
+                        {Array.from({ length: 20 }, (_, i) => {
+                          const year = new Date().getFullYear() - 10 + i;
+                          return (
+                            <option key={year} value={year.toString()}>
+                              {year}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Upload Files <span className="text-red-500">*</span>
+                  </label>
+                  <label
+                    className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 transition hover:border-red-400 hover:bg-red-50/50 ${
+                      uploadingReport ? "cursor-not-allowed opacity-60" : ""
+                    } ${selectedFiles.length > 0 ? "border-red-400 bg-red-50/30" : ""}`}
+                  >
+                    <input
+                      type="file"
+                      accept=".xls,.xlsx,.csv"
+                      multiple
+                      className="hidden"
+                      disabled={uploadingReport}
+                      onChange={handleCsvSelect}
+                    />
+                    <div className="flex flex-col items-center">
+                      <svg
+                        className={`mb-3 h-12 w-12 ${selectedFiles.length > 0 ? "text-red-500" : "text-gray-400 group-hover:text-red-500"}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="mb-1 text-sm font-medium text-gray-700">
+                        {selectedFiles.length > 0
+                          ? `${selectedFiles.length} file(s) selected`
+                          : "Click to upload "}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Excel files (.xls, .xlsx) 
+                      </p>
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-3 max-h-32 w-full space-y-1 overflow-y-auto rounded-lg bg-white p-2 text-left">
+                          {selectedFiles.map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-2 rounded bg-gray-100 px-2 py-1 text-xs">
+                              <svg className="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span className="truncate text-gray-700">{file.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+                    <div className="flex items-start gap-2">
+                      <svg className="h-5 w-5 flex-shrink-0 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <p className="text-sm text-red-800">{error}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+              <div className="flex justify-end gap-3">
+                <button
+                  className="rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    if (!uploadingReport) {
+                      setUploadModalOpen(false);
+                      setSelectedFiles([]);
+                      setWeekStartDate("");
+                      setWeekEndDate("");
+                      setMonthYear("");
+                      setError(null);
+                    }
+                  }}
+                  disabled={uploadingReport}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  onClick={handleUploadSubmit}
+                  disabled={
+                    uploadingReport ||
+                    !weekStartDate ||
+                    !weekEndDate ||
+                    !monthYear ||
+                    selectedFiles.length === 0
+                  }
+                >
+                  {uploadingReport ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-5.291z"
+                        />
+                      </svg>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload Reports
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
