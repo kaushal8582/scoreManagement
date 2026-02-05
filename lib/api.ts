@@ -1,5 +1,6 @@
 // Allow overriding API base via env
-export const API_BASE = "https://bni-api.snabbtech.com/api";
+// export const API_BASE = "https://bni-api.snabbtech.com/api";
+export const API_BASE = "http://localhost:3220/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -360,3 +361,14 @@ export async function deleteWeeklyReport(id: string) {
     method: "DELETE"
   });
 }
+
+
+export async function createFormData(payload:any) {
+  console.log("payloa d",payload)
+  return apiRequest<any>(`${API_BASE}/form`,{
+    method :"POST",
+    headers: { "Content-Type": "application/json" },
+    body : JSON.stringify(payload)
+  })
+}
+

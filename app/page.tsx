@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { login, register } from "../lib/api";
+import { Toaster } from "react-hot-toast";
+
 
 export default function HomePage() {
   const router = useRouter();
@@ -200,6 +202,8 @@ export default function HomePage() {
           </span>
         </footer>
       </div>
+
+      <Toaster/>
     </main>
   );
 }

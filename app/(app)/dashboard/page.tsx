@@ -14,10 +14,13 @@ import {
   fetchCategoryTotals,
   fetchUserBreakdown,
   fetchTeamBreakdown,
+  fetchUsers,
+  createFormData,
 } from "../../../lib/api";
 import { BuildingChart } from "../../../components/BuildingChart";
 import { CircleChart } from "../../../components/CircleChart";
 import SummaryBoxes from "../../../components/SummayBox";
+import toast from "react-hot-toast";
 // import { CircleChart } from "../../../components/CircleChart";
 
 export default function DashboardPage() {
@@ -69,14 +72,33 @@ export default function DashboardPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [user, setUser] = useState<any>({});
   const [selectedMonthYear, setSelectedMonthYear] = useState<string>("");
+  const [showFormModal,setShowFormModal] = useState<boolean>(false)
+  const [userAllData,setUserAllData] = useState<any>(null)
+  const [selectedUser,setSelectedUser] = useState("")
+  const [uploadingForm,setUploadingForm]  = useState<boolean>(false)
+  const [selectedCategory,setSelectedCategory] = useState('')
+  const [visitorsDetails,setVisitorsDetails] = useState({
+    name :"",
+    email :"",
+    phoneNo : "",
+  })
 
   useEffect(() => {
+    
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     setUser(user);
   }, []);
 
-  console.log("userbre", userBreakdown);
 
+  useEffect(()=>{
+    async function findData() {
+      const usersData = await fetchUsers();
+      setUserAllData(usersData);
+    }
+    findData()
+  },[])
+
+  
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -152,6 +174,60 @@ export default function DashboardPage() {
       setUploadingReport(false);
     }
   };
+
+
+  const handelFormSubmit = async()=>{
+    try {
+     setUploadingForm(true)
+
+      const payload = {
+        user : selectedUser,
+        category : selectedCategory,
+        visitorsName : visitorsDetails.name,
+        visitorsEmail : visitorsDetails.email,
+        visitorsPhone : visitorsDetails.phoneNo
+      }
+
+      const forms = await createFormData(payload);
+
+      console.log("formsres",forms);
+
+      if(forms){
+        toast.success("Form Added Successfull.")
+      }
+
+      setSelectedCategory("");
+      setSelectedUser("");
+      setVisitorsDetails({
+        name:"",
+        email :"",
+        phoneNo:"",
+      })
+
+      setShowFormModal(false)
+      setUploadingForm(false)
+    } catch (error) {
+
+      toast.error(
+        error?.message
+          ? JSON.parse(error.message)?.message
+          : "Something went wrong"
+      );
+      
+
+      setSelectedCategory("");
+      setSelectedUser("");
+      setVisitorsDetails({
+        name:"",
+        email :"",
+        phoneNo:"",
+      })
+
+      setShowFormModal(false)
+      setUploadingForm(false)
+      
+    }
+  }
 
 
 
@@ -235,6 +311,14 @@ export default function DashboardPage() {
           >
             Upload Weekly Reports
           </button>}
+
+
+          <button
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setShowFormModal(true)}
+          >
+            Form
+          </button>
           
         </div>
       </section>
@@ -584,6 +668,159 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+{showFormModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-2xl transition-all">
+      {/* Header */}
+      <div className="border-b border-gray-100 bg-gradient-to-r from-red-50 to-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Visitor Registration</h2>
+          <button 
+            onClick={() => setShowFormModal(false)}
+            className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="space-y-6">
+          {/* 1. User Selection Dropdown */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Assign to User <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+            >
+              <option value="">Select a user...</option>
+              {userAllData?.map((item:any)=>(<option value={item?._id}>{item?.fullName}</option>))}
+              
+              {/* <option value="2">Jane Smith</option>
+              <option value="3">Robert Wilson</option> */}
+            </select>
+          </div>
+
+          {/* 2. Checkbox Group - Only shows if user is selected */}
+          {selectedUser && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="mb-3 block text-sm font-medium text-gray-700">
+                Select Category <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+  {['Business', 'Personal', 'Maintenance', 'Delivery', 'Interview', 'Other'].map((item) => (
+    <label 
+      key={item} 
+      className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 transition ${
+        selectedCategory === item 
+          ? "border-red-500 bg-red-50" // Jab select ho toh red border aur background
+          : "border-gray-100 bg-gray-50 hover:bg-red-50"
+      }`}
+    >
+      <input
+        type="radio"
+        name="category"
+        value={item}
+        // Ye line sabse important hai state update ke liye
+        checked={selectedCategory === item} 
+        onChange={(e) => setSelectedCategory(e.target.value)}
+        className="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500"
+      />
+      <span className={`text-xs font-medium ${
+        selectedCategory === item ? "text-red-700" : "text-gray-700"
+      }`}>
+        {item}
+      </span>
+    </label>
+  ))}
+</div>
+            </div>
+          )}
+
+          {/* 3. Input Fields - Only shows if user is selected */}
+          {selectedCategory && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+              <hr className="border-gray-100" />
+              
+              {/* Visitor Name */}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  Visitor Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={visitorsDetails.name}
+                  onChange={(e)=> {setVisitorsDetails({name : e.target.value,email:visitorsDetails.email,phoneNo:visitorsDetails.phoneNo})}}
+                  placeholder="Enter full name"
+                  className="w-full text-black rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Email */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">Email Address</label>
+                  <input
+                    type="email"
+                    
+                    onChange={(e)=> {setVisitorsDetails({name : visitorsDetails.name,email:e.target.value,phoneNo:visitorsDetails.phoneNo})}}
+                    placeholder="example@mail.com"
+                    className="w-full text-black rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  />
+                </div>
+                {/* Phone */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">Phone Number</label>
+                  <input
+                    type="tel"
+                    max={10}
+                    min={10}
+                    onChange={(e)=> {setVisitorsDetails({name : visitorsDetails.name,email:visitorsDetails.email,phoneNo:e.target.value})}}
+                    placeholder="9999999999"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 text-black"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-gray-100 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+        <button
+          onClick={() => setShowFormModal(false)}
+          className="rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          className="rounded-lg bg-red-600 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:bg-red-700 disabled:opacity-50"
+          disabled={!selectedUser || selectedUser==="" || !selectedCategory || !visitorsDetails.name}
+          onClick={handelFormSubmit}
+        >
+          {uploadingForm ?<svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-5.291z"
+                        />
+                      </svg>:" Submit Entry"}
+
+         
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Top teams – show three category circle charts like See more page */}
       {loading ? null : (

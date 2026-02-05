@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Team Points Dashboard",
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       
       <body className="min-h-screen bg-slate-950 text-slate-50">
         {children}
+        <Toaster/>
       </body>
     </html>
   );

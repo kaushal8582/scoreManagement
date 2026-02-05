@@ -13,7 +13,7 @@ import {
 } from "../../../lib/api";
 import WeeklyReports from "../../../components/WeeklyReports";
 
-type TabKey = "upload" | "teams" | "weekly" | "points";
+type TabKey = "upload" | "teams" | "weekly" | "points" | "forms";
 
 interface UserOption {
   value: string;
@@ -383,6 +383,16 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("points")}
             >
               Points Calculations
+            </button>
+            <button
+              className={`px-3 py-2 font-medium ${
+                activeTab === "forms"
+                  ? "border-b-2 border-brand-500 text-black"
+                  : "text-black"
+              }`}
+              onClick={() => setActiveTab("forms")}
+            >
+              Show Forms
             </button>
           </nav>
         </div>
