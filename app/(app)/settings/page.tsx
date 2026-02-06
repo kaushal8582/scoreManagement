@@ -10,6 +10,7 @@ import {
   deleteTeam,
   updateTeam,
   downloadUsersSampleXls,
+  getAllFormData,
 } from "../../../lib/api";
 import WeeklyReports from "../../../components/WeeklyReports";
 
@@ -79,6 +80,12 @@ export default function SettingsPage() {
   const pageSize = 100;
   const [user, setUser] = useState<any>({});
 
+
+  const [forms, setForms] = useState<any[]>([]);
+const [formsLoading, setFormsLoading] = useState(false);
+const [formsPage, setFormsPage] = useState(1);
+const formsPageSize = 10;
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     setUser(user);
@@ -93,6 +100,7 @@ export default function SettingsPage() {
       try {
         const usersData = await fetchUsers();
         const teamsData = await fetchTeams();
+        const allFormData = await getAllFormData("25","0")
         const totals = await fetchUserTotals();
         if (!mounted) return;
         setUsers(usersData as any);
@@ -101,7 +109,11 @@ export default function SettingsPage() {
         // conos
         setUserOptions(
           usersData
-            .filter((u) => (u.category ?? "").toLowerCase() !== "admin" && (u.category ?? "").toLowerCase() !== "guest")
+            .filter((u) => {
+              const cat = (u.category ?? "").toLowerCase();
+              // In categories ko list se bahar rakhein
+              return !["admin", "guest", "form"].includes(cat);
+            })
             .map((u) => ({
               value: u._id,
               label: `${u.firstName} ${u.lastName}`,
@@ -143,7 +155,11 @@ export default function SettingsPage() {
       setCurrentPage(1);
       setUserOptions(
         usersData
-          .filter((u) => (u.category ?? "").toLowerCase() !== "admin" && (u.category ?? "").toLowerCase() !== "guest")
+          .filter((u) => {
+            const cat = (u.category ?? "").toLowerCase();
+            // In categories ko list se bahar rakhein
+            return !["admin", "guest", "form"].includes(cat);
+          })
           .map((u) => ({
             value: u._id,
             label: `${u.firstName} ${u.lastName}`,
@@ -300,7 +316,7 @@ export default function SettingsPage() {
 
   const filteredUsers = users.filter((u) => {
     // ❌ admin users hide
-    if ((u.category ?? "").toLowerCase() === "admin" || (u.category ?? "").toLowerCase() === "guest") {
+    if ((u.category ?? "").toLowerCase() === "admin" || (u.category ?? "").toLowerCase() === "guest" || (u.category?? "").toLowerCase()==="form") {
       return false;
     }
 
@@ -329,6 +345,26 @@ export default function SettingsPage() {
   const filteredUserOptions = userOptions.filter((o) =>
     o.label.toLowerCase().includes(memberSearch.trim().toLowerCase())
   );
+
+
+  useEffect(() => {
+    if (activeTab === "forms") {
+      loadForms();
+    }
+  }, [activeTab]);
+  
+  async function loadForms() {
+    setFormsLoading(true);
+    try {
+      // Using your existing lib/api function
+      const data = await getAllFormData("100", "0"); 
+      setForms(data.forms || []);
+    } catch (err) {
+      console.error("Failed to load forms", err);
+    } finally {
+      setFormsLoading(false);
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 text-black" >
@@ -384,7 +420,7 @@ export default function SettingsPage() {
             >
               Points Calculations
             </button>
-            <button
+            {user?.category =="form" &&<button
               className={`px-3 py-2 font-medium ${
                 activeTab === "forms"
                   ? "border-b-2 border-brand-500 text-black"
@@ -393,7 +429,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("forms")}
             >
               Show Forms
-            </button>
+            </button> }
+            
           </nav>
         </div>
 
@@ -577,6 +614,102 @@ export default function SettingsPage() {
           </div>
           
         )}
+
+{activeTab === "forms" && (
+  <div className="mt-4 space-y-6">
+    <div className="space-y-2">
+      <h2 className="text-sm font-semibold text-black sm:text-base">
+        Submitted Forms
+      </h2>
+      <p className="text-xs text-slate-400 sm:text-sm">
+        Review visitor details and business categories submitted through the portal.
+      </p>
+    </div>
+
+    {formsLoading ? (
+      <div className="flex items-center min-h-[40vh] justify-center gap-2">
+        <div className="animate-spin rounded-full border-4 border-solid border-gray-300 border-t-transparent h-8 w-8"></div>
+        <div className="text-sm font-medium text-gray-700">Loading forms...</div>
+      </div>
+    ) : (
+      <div className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-800 text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Assign User
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Visitor Name
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Category
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Contact Info
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Date Submitted
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {forms
+                .slice((formsPage - 1) * formsPageSize, formsPage * formsPageSize)
+                .map((form) => (
+                  <tr key={form._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-3 py-4">
+                      <div className="font-medium text-black">{form?.user?.fullName}</div>
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="font-medium text-black">{form.visitorsName}</div>
+                    </td>
+                    <td className="px-3 py-4">
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                        {form.category}
+                      </span>
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="text-slate-900">{form.visitorsEmail}</div>
+                      <div className="text-xs text-slate-500">{form.visitorsPhone}</div>
+                    </td>
+                    <td className="px-3 py-4 text-slate-500">
+                      {new Date(form.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Form Pagination */}
+        <div className="flex items-center justify-between py-2 text-xs text-slate-600">
+          <div>
+            Showing {(formsPage - 1) * formsPageSize + 1}–
+            {Math.min(formsPage * formsPageSize, forms.length)} of {forms.length}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-md border border-slate-300 bg-white px-3 py-1 hover:bg-slate-50 disabled:opacity-50"
+              disabled={formsPage === 1}
+              onClick={() => setFormsPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+            <button
+              className="rounded-md border border-slate-300 bg-white px-3 py-1 hover:bg-slate-50 disabled:opacity-50"
+              disabled={formsPage * formsPageSize >= forms.length}
+              onClick={() => setFormsPage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
         {activeTab === "teams" && (
           <div className="mt-4 space-y-6">

@@ -371,4 +371,12 @@ export async function createFormData(payload:any) {
     body : JSON.stringify(payload)
   })
 }
+export async function getAllFormData(limit: string, skip: string) {
+  return apiRequest<any>(
+    `${API_BASE}/form?limit=${limit}&skip=${skip}`,
+    {
+      method: "GET",
+    }
+  );
+}
 
